@@ -133,6 +133,14 @@ jobs:
             echo ""
             echo "## Installation"
             echo ""
+            echo "### APT (Debian/Ubuntu)"
+            echo ""
+            echo '```bash'
+            echo "curl -fsSL https://pkg.grimwulf.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg"
+            echo 'echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.grimwulf.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list'
+            echo "sudo apt update && sudo apt install wispr-flow"
+            echo '```'
+            echo ""
             echo "### Download"
             echo ""
             echo "Grab a \`.deb\`, \`.rpm\`, or \`.AppImage\` from the assets below."
@@ -154,8 +162,6 @@ jobs:
   update-apt-repo:
     name: Update APT Repository
     needs: [release]
-    # Disabled until this fork has its own package repository infrastructure.
-    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

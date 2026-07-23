@@ -3,8 +3,8 @@
 This project ships through tag-driven CI. A tag of the form
 `v{REPO_VERSION}+wispr{WISPR_FLOW_VERSION}` on `main` triggers the publish chain
 in [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which builds both
-architectures and attaches the artifacts to a GitHub Release. APT, DNF, and AUR
-publishing is disabled until this fork has its own distribution infrastructure.
+architectures, attaches the artifacts to a GitHub Release, and publishes the
+`.deb` packages to the APT repository. DNF and AUR publishing remain disabled.
 Pushes to branches/PRs run only the lint/unit gates.
 
 ```bash
@@ -39,7 +39,7 @@ Before the first real release:
 - **`gh-pages` branch** — an orphan branch holding the published repo metadata.
   GitHub Pages does **not** need to be enabled: the Worker reads metadata from
   this branch via `raw.githubusercontent.com` and the smoke tests/heartbeat hit
-  `pkg.wispr-flow-linux.dev` directly. Seed it from a throwaway clone so your
+  `pkg.grimwulf.dev` directly. Seed it from a throwaway clone so your
   working tree is untouched (a plain `git switch --orphan` would stage the whole
   repo into the branch):
 
@@ -70,8 +70,8 @@ Before the first real release:
   the checkout each release, so the AUR repo only needs to exist.
 
 - **Worker** — the `wispr-flow-linux/worker` repo deploys the Cloudflare Worker
-  at `pkg.wispr-flow-linux.dev` (see that repo's README). Until it's live, the
-  APT/DNF jobs keep the binaries in `gh-pages` and the smoke tests skip; once
+  at `pkg.grimwulf.dev` (see that repo's README). Until it's live, the APT job
+  keeps the binaries in `gh-pages` and the smoke tests skip; once
   live, binaries are stripped and served by 302-redirect to Release assets.
 
 ## Two release flavors
@@ -107,8 +107,8 @@ After the gate jobs pass, the [`ci.yml`](.github/workflows/ci.yml) chain:
 2. Runs the format validators (`tests/test-artifact-*.sh`).
 3. Creates the GitHub Release and attaches the six packages.
 
-The retained `update-apt-repo`, `update-dnf-repo`, and `update-aur-repo` jobs are
-disabled until this fork has its own distribution infrastructure.
+The APT job publishes after every tagged release. The retained
+`update-dnf-repo` and `update-aur-repo` jobs remain disabled.
 
 ## After the release lands
 

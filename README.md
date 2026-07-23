@@ -1,6 +1,6 @@
 # Wispr Flow for Linux (unofficial)
 
-[![CI](https://github.com/wispr-flow-linux/wispr-flow-linux/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wispr-flow-linux/wispr-flow-linux/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI](https://github.com/srivasv/wispr-flow-linux/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/srivasv/wispr-flow-linux/actions/workflows/ci.yml?query=branch%3Amain)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](UNLICENSE)
 
 This project provides build scripts to run the proprietary **Wispr Flow**
@@ -16,7 +16,7 @@ focused application.
 **This is an unofficial port.** I'm not affiliated with Wispr. For the official
 app and support, see [wisprflow.ai](https://wisprflow.ai). If you hit a
 build-script or Linux issue,
-[open an issue](https://github.com/wispr-flow-linux/wispr-flow-linux/issues) here.
+[open an issue](https://github.com/srivasv/wispr-flow-linux/issues) here.
 
 **Documentation:** full docs at [`docs/index.md`](docs/index.md). Build details
 in [`docs/building.md`](docs/building.md). Release history in
@@ -33,8 +33,8 @@ are in [`docs/installation.md`](docs/installation.md).
 ### APT (Debian/Ubuntu)
 
 ```bash
-curl -fsSL https://pkg.wispr-flow-linux.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg
-echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.wispr-flow-linux.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list
+curl -fsSL https://pkg.grimwulf.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg
+echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.grimwulf.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list
 sudo apt update && sudo apt install wispr-flow
 ```
 
@@ -54,7 +54,7 @@ yay -S wispr-flow-appimage   # or: paru -S wispr-flow-appimage
 ### Manual download
 
 Grab a `.deb`, `.rpm`, or `.AppImage` from the
-[Releases page](https://github.com/wispr-flow-linux/wispr-flow-linux/releases).
+[Releases page](https://github.com/srivasv/wispr-flow-linux/releases).
 
 > [!NOTE]
 > These published packages bundle the proprietary Wispr Flow app, downloaded from

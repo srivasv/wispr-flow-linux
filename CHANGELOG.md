@@ -8,6 +8,12 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.5] - 2026-07-22
+
+### Added
+
+- A signed APT repository at `pkg.grimwulf.dev` for Debian and Ubuntu users.
+
 ## [v1.0.4] - 2026-07-22
 
 ### Fixed

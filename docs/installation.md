@@ -7,8 +7,8 @@ ship for **amd64 and arm64** on every release.
 
 ```bash
 # Debian/Ubuntu, the short version:
-curl -fsSL https://pkg.wispr-flow-linux.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg
-echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.wispr-flow-linux.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list
+curl -fsSL https://pkg.grimwulf.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg
+echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.grimwulf.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list
 sudo apt update && sudo apt install wispr-flow
 ```
 
@@ -35,11 +35,11 @@ pull new versions with your normal system updates. Architecture is auto-selected
 
 ```bash
 # 1. Pin the repository signing key
-curl -fsSL https://pkg.wispr-flow-linux.dev/KEY.gpg \
+curl -fsSL https://pkg.grimwulf.dev/KEY.gpg \
   | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg
 
 # 2. Add the repository
-echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.wispr-flow-linux.dev stable main" \
+echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.grimwulf.dev stable main" \
   | sudo tee /etc/apt/sources.list.d/wispr-flow.list
 
 # 3. Install
@@ -78,7 +78,7 @@ paru -S wispr-flow-appimage
 ## Manual download
 
 Grab a `.deb`, `.rpm`, or `.AppImage` for your architecture from the
-[Releases page](https://github.com/wispr-flow-linux/wispr-flow-linux/releases),
+[Releases page](https://github.com/srivasv/wispr-flow-linux/releases),
 then:
 
 ```bash
@@ -143,7 +143,7 @@ slate.
 
 ## How distribution works
 
-`pkg.wispr-flow-linux.dev` is a Cloudflare Worker that serves the APT/DNF metadata
+`pkg.grimwulf.dev` is a Cloudflare Worker that serves the APT metadata
 and 302-redirects package downloads to the matching GitHub Release asset, so the
 package bytes never hit GitHub's 100 MB push cap. The mechanics are in
 [learnings/apt-worker-architecture.md](learnings/apt-worker-architecture.md); the
