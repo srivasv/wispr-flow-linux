@@ -133,25 +133,7 @@ jobs:
             echo ""
             echo "## Installation"
             echo ""
-            echo "### APT (Debian/Ubuntu)"
-            echo '```bash'
-            echo "curl -fsSL https://pkg.wispr-flow-linux.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg"
-            echo 'echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.wispr-flow-linux.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list'
-            echo "sudo apt update && sudo apt install wispr-flow"
-            echo '```'
-            echo ""
-            echo "### DNF (Fedora/RHEL)"
-            echo '```bash'
-            echo "sudo curl -fsSL https://pkg.wispr-flow-linux.dev/rpm/wispr-flow.repo -o /etc/yum.repos.d/wispr-flow.repo"
-            echo "sudo dnf install wispr-flow"
-            echo '```'
-            echo ""
-            echo "### AUR (Arch Linux)"
-            echo '```bash'
-            echo "yay -S wispr-flow-appimage"
-            echo '```'
-            echo ""
-            echo "### Manual download"
+            echo "### Download"
             echo ""
             echo "Grab a \`.deb\`, \`.rpm\`, or \`.AppImage\` from the assets below."
             echo ""
@@ -172,7 +154,8 @@ jobs:
   update-apt-repo:
     name: Update APT Repository
     needs: [release]
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # Disabled until this fork has its own package repository infrastructure.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -319,7 +302,8 @@ jobs:
   update-dnf-repo:
     name: Update DNF Repository
     needs: [release, update-apt-repo]
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # Disabled until this fork has its own package repository infrastructure.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -500,7 +484,8 @@ jobs:
   update-aur-repo:
     name: Update AUR Package
     needs: [release]
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    # Disabled until this fork has its own AUR package.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository (for PKGBUILD template)

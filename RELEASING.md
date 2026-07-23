@@ -3,8 +3,9 @@
 This project ships through tag-driven CI. A tag of the form
 `v{REPO_VERSION}+wispr{WISPR_FLOW_VERSION}` on `main` triggers the publish chain
 in [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which builds both
-architectures, attaches the artifacts to a GitHub Release, and updates the APT,
-DNF, and AUR repositories. Pushes to branches/PRs run only the lint/unit gates.
+architectures and attaches the artifacts to a GitHub Release. APT, DNF, and AUR
+publishing is disabled until this fork has its own distribution infrastructure.
+Pushes to branches/PRs run only the lint/unit gates.
 
 ```bash
 # Cut a project release once the prerequisites below are in place:
@@ -30,9 +31,10 @@ Before the first real release:
     `gh-pages` `conf/distributions` `SignWith:` field.
   - `AUR_SSH_PRIVATE_KEY` — deploy key registered on the
     `wispr-flow-appimage` AUR account.
-  - `GH_PAT` — a PAT with `repo` + `workflow` scope. `check-wispr-version` and
-    `update-flake-lock` use it; a tag pushed with the default `GITHUB_TOKEN`
-    would **not** re-trigger the tag-driven workflow.
+  - `GH_PAT` — used only by `check-wispr-version`; a tag pushed with the default
+    `GITHUB_TOKEN` would **not** re-trigger the tag-driven workflow.
+
+  None of these secrets is needed for manual GitHub Release publishing.
 
 - **`gh-pages` branch** — an orphan branch holding the published repo metadata.
   GitHub Pages does **not** need to be enabled: the Worker reads metadata from
@@ -104,15 +106,14 @@ After the gate jobs pass, the [`ci.yml`](.github/workflows/ci.yml) chain:
    downloads the proprietary installer and stages the pinned prebuilt helper.
 2. Runs the format validators (`tests/test-artifact-*.sh`).
 3. Creates the GitHub Release and attaches the six packages.
-4. Hands off to `update-apt-repo`, `update-dnf-repo`, and `update-aur-repo`,
-   which sign and publish to the Cloudflare-fronted package repos.
+
+The retained `update-apt-repo`, `update-dnf-repo`, and `update-aur-repo` jobs are
+disabled until this fork has its own distribution infrastructure.
 
 ## After the release lands
 
 - **Verify the Release page** — six assets, sizes look right, notes rendered.
 - **Smoke-test one artifact** — download the AppImage and run `--doctor`.
-- **Watch `apt-repo-heartbeat`** — the daily run validates the redirect chain
-  end-to-end and opens a tracking issue on failure.
 
 ## If something goes wrong mid-release
 
