@@ -1,0 +1,5 @@
+Component: main
+Origin: wispr-flow-linux
+Label: Wispr Flow for Linux (unofficial)
+Architecture: arm64
+Description: Unofficial Wispr Flow Linux packages
