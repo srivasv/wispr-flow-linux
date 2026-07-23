@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.4] - 2026-07-22
+
 ### Fixed
 
 - On X11 the Hub window opened as an unmanaged (override-redirect) window:
