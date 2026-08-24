@@ -234,11 +234,18 @@ run_launch_smoke_test() {
 		return
 	fi
 
-	local cache_root xvfb_log launcher_log
+	local cache_root cache_dir config_dir home_dir runtime_dir
+	local xvfb_log launcher_log
 	cache_root=$(mktemp -d)
+	cache_dir="$cache_root/cache"
+	config_dir="$cache_root/config"
+	home_dir="$cache_root/home"
+	runtime_dir="$cache_root/runtime"
+	mkdir -p "$cache_dir" "$config_dir" "$home_dir" "$runtime_dir"
+	chmod 0700 "$cache_dir" "$config_dir" "$home_dir" "$runtime_dir"
 	xvfb_log=$(mktemp)
 	# Must match setup_logging in launcher-common.sh: $XDG_CACHE_HOME/wispr-flow.
-	launcher_log="$cache_root/wispr-flow/launcher.log"
+	launcher_log="$cache_dir/wispr-flow/launcher.log"
 	_smoke_cache_root="$cache_root"
 	_smoke_xvfb_log="$xvfb_log"
 	_smoke_pkill_match="$pkill_match"
@@ -248,10 +255,13 @@ run_launch_smoke_test() {
 	# redirected so the test owns the launcher.log the marker lands in.
 	local -a runner=(setsid)
 	if [[ -n $run_as ]]; then
-		chmod 0777 "$cache_root"
+		chmod 0711 "$cache_root"
+		chown "$run_as" "$cache_dir" "$config_dir" "$home_dir" \
+			"$runtime_dir"
 		runner+=(runuser -u "$run_as" --)
 	fi
-	runner+=(env "XDG_CACHE_HOME=$cache_root"
+	runner+=(env "HOME=$home_dir" "XDG_CACHE_HOME=$cache_dir"
+		"XDG_CONFIG_HOME=$config_dir" "XDG_RUNTIME_DIR=$runtime_dir"
 		xvfb-run -a -s '-screen 0 1280x720x24'
 		dbus-run-session -- "$@")
 
