@@ -1,46 +1,39 @@
 #!/usr/bin/env bash
 #===============================================================================
 # resolve-installer-url.sh -- resolve the latest Wispr Flow Windows installer
-# download URL and version from the upstream "latest" redirect.
+# download URL, version, and checksum from the upstream release manifest.
 #
-# Wispr Flow publishes a stable redirect endpoint that 302s to a versioned,
-# CDN-hosted Setup .exe whose filename embeds the version:
-#   https://dl.wisprflow.ai/windows/latest
-#     -> https://dl.wisprflow.com/wispr-flow/win32/x64/Wispr%20Flow%20Setup-v1.5.695.exe
+# Wispr Flow publishes the x64 artifact metadata used by its Windows installer:
+#   https://dl.wisprflow.com/wispr-flow/win32/latest.json
 #
-# Only a Windows x64 build is published (the arm64 Windows endpoint redirects to
-# the homepage). The Linux arm64 package is built from the SAME x64 installer --
-# the app bundle is arch-neutral JS/asar -- so this resolver is arch-independent.
+# The Linux arm64 package uses the same x64 installer because the app bundle is
+# arch-neutral JS/asar, so this resolver is arch-independent.
 #
 # Output contract (stdout, one KEY=VALUE per line; ALL diagnostics to stderr):
-#   URL=<final resolved download URL>
+#   URL=<installer download URL>
 #   VERSION=<x.y.z extracted from the installer filename>
+#   SHA256=<installer checksum from the manifest>
 #
-# Usage:   resolve-installer-url.sh [--latest-url <url>] [--version <x.y.z>]
-#   --latest-url   override the upstream "latest" redirect endpoint
-#   --version      skip filename parsing and emit this version verbatim
+# Usage:   resolve-installer-url.sh [--latest-url <url>]
+#   --latest-url   override the upstream latest-manifest URL
 #
-# Exit 0 on success; non-zero if the URL can't be resolved or the version can't
-# be parsed. This is a standalone CI helper -- it sources nothing.
+# Exit 0 on success; non-zero if the manifest cannot be fetched or validated.
+# This is a standalone CI helper -- it sources nothing.
 #===============================================================================
 set -uo pipefail
 
-readonly DEFAULT_LATEST_URL='https://dl.wisprflow.ai/windows/latest'
+readonly DEFAULT_LATEST_URL='https://dl.wisprflow.com/wispr-flow/win32/latest.json'
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'resolve-installer-url: %s\n' "$*" >&2; exit 1; }
 
 latest_url="$DEFAULT_LATEST_URL"
-version_override=''
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--latest-url)
 			[[ -n ${2:-} ]] || die '--latest-url needs a value'
 			latest_url="$2"; shift 2 ;;
-		--version)
-			[[ -n ${2:-} ]] || die '--version needs a value'
-			version_override="$2"; shift 2 ;;
 		-h|--help)
 			grep '^#' "$0" | sed 's/^# \?//'; exit 0 ;;
 		*)
@@ -49,37 +42,63 @@ while [[ $# -gt 0 ]]; do
 done
 
 command -v curl >/dev/null 2>&1 || die 'curl is required'
+command -v python3 >/dev/null 2>&1 || die 'python3 is required'
 
 log "Resolving Wispr Flow installer from ${latest_url} ..."
 
-# Follow the redirect chain with a HEAD request and report the final URL.
-# -f fails on HTTP errors; -S surfaces them; -L follows redirects; -I = HEAD.
-final_url="$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
-	--max-time 60 "$latest_url")"
+# Fetch the small JSON manifest, then validate its trust-boundary fields with
+# Python's standard library (already required by the build's patch suite).
+manifest="$(curl -fsSL --max-time 60 "$latest_url")"
 rc=$?
-if [[ $rc -ne 0 || -z $final_url ]]; then
-	die "failed to resolve ${latest_url} (curl rc=${rc})"
+if [[ $rc -ne 0 || -z $manifest ]]; then
+	die "failed to fetch ${latest_url} (curl rc=${rc})"
 fi
 
-if [[ $final_url == "$latest_url" ]]; then
-	die "no redirect followed from ${latest_url} (got the same URL back)"
-fi
+parsed="$(python3 - "$manifest" <<'PY'
+import json
+import re
+import sys
+from urllib.parse import unquote, urlparse
 
-log "Resolved URL: ${final_url}"
+try:
+    manifest = json.loads(sys.argv[1])
+    if not isinstance(manifest, dict):
+        raise ValueError("manifest root must be an object")
+    if manifest.get("schemaVersion") != 1:
+        raise ValueError("unsupported schemaVersion")
+    artifact = manifest["windows"]["x64"]
+    if not isinstance(artifact, dict):
+        raise ValueError("windows.x64 must be an object")
+    url = artifact["url"]
+    sha256 = artifact["sha256"]
+    size = artifact["size"]
+    if not isinstance(url, str):
+        raise ValueError("installer URL must be a string")
+    parsed_url = urlparse(url)
+    if parsed_url.scheme != "https" or not parsed_url.netloc:
+        raise ValueError("installer URL must use HTTPS")
+    match = re.search(
+        r"[Ss]etup-v([0-9]+\.[0-9]+\.[0-9]+)\.exe$",
+        unquote(parsed_url.path),
+    )
+    if not match:
+        raise ValueError("installer URL has no versioned Setup filename")
+    if not isinstance(sha256, str) or not re.fullmatch(
+        r"[0-9a-fA-F]{64}", sha256
+    ):
+        raise ValueError("invalid installer SHA-256")
+    if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
+        raise ValueError("invalid installer size")
+except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+    print(f"manifest validation failed: {error}", file=sys.stderr)
+    sys.exit(1)
 
-# Extract the version from the filename, e.g. "...Setup-v1.5.695.exe" -> 1.5.695.
-if [[ -n $version_override ]]; then
-	version="$version_override"
-else
-	version="$(printf '%s\n' "$final_url" \
-		| sed -nE 's/.*[Ss]etup-v([0-9]+\.[0-9]+\.[0-9]+)\.exe.*/\1/p')"
-fi
+print(f"URL={url}")
+print(f"VERSION={match.group(1)}")
+print(f"SHA256={sha256.lower()}")
+PY
+)" || die "invalid manifest from ${latest_url}"
 
-if [[ -z $version ]]; then
-	die "could not parse a version from ${final_url} (pass --version to override)"
-fi
-
-log "Resolved version: ${version}"
-
-printf 'URL=%s\n' "$final_url"
-printf 'VERSION=%s\n' "$version"
+log "$(printf '%s\n' "$parsed" | grep '^URL=')"
+log "$(printf '%s\n' "$parsed" | grep '^VERSION=')"
+printf '%s\n' "$parsed"

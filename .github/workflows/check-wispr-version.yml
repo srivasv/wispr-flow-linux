@@ -1,7 +1,7 @@
 name: Check Wispr Flow Version
 
 # Tracks upstream Wispr Flow releases. Daily, it resolves the latest Windows
-# installer version from Wispr's "latest" redirect; when it differs from the
+# installer version from Wispr's release manifest; when it differs from the
 # stored WISPR_FLOW_VERSION it bumps APP_VERSION (build.sh) and the Nix package
 # version, updates the variable, and pushes a v<REPO_VERSION>+wispr<VERSION> tag
 # that triggers the publish chain in ci.yml.

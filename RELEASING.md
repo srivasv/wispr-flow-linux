@@ -78,7 +78,7 @@ Before the first real release:
 
 - **Upstream-tracking retag (no human action).** `check-wispr-version` runs
   daily: it resolves the latest Wispr Flow version from
-  `dl.wisprflow.ai/windows/latest`, and when it differs from
+  `dl.wisprflow.com/wispr-flow/win32/latest.json`, and when it differs from
   `WISPR_FLOW_VERSION` it bumps `APP_VERSION` in `build.sh` and the version in
   `nix/wispr-flow.nix`, updates the variable, and pushes a new tag with the same
   `REPO_VERSION` and a new `+wispr{X.Y.Z}` suffix. These don't get CHANGELOG

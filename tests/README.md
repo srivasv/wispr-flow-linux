@@ -19,6 +19,7 @@ bats tests/*.bats
 | `doctor.bats` | `scripts/doctor.sh`: the `_pass`/`_fail`/`_warn` counter, display/clipboard/helper/singleton-lock checks (driven with stubbed tool presence and temp fixtures), and `run_doctor` exit status. |
 | `verify-patches.bats` | `scripts/verify-patches.sh`: PASS when every Linux patch marker is present in a fixture app.asar, exit 1 when any one is omitted (omit-one matrix), exit 2 on bad usage. |
 | `linux-patches.bats` | `scripts/patches/linux-{renderer-chrome,window-frame,renderer-treat-as-windows,deeplink}.sh`: each patch applied to a hermetic minified-JS fixture carrying its anchor — asserts the transformation + marker, leaves unrelated sites alone, `node --check`s the result, is idempotent (second run is byte-identical), and bails non-zero when the anchor is absent. |
+| `resolve-installer-url.bats` | Validates manifest parsing and rejects bad schema, URL, version, or SHA-256 fields without network access. |
 
 Don't have bats yet? Grab it: `sudo dnf install bats` / `sudo apt install bats`.
 
@@ -37,9 +38,13 @@ This tier looks at an actual built package. Each
   `WISPR_ARTIFACT_INSTALL=1` and root**: installs the package, checks
   on-disk files + setuid `chrome-sandbox`, runs `--doctor`, and does a headless
   `xvfb-run` + `dbus-run-session` launch that polls `launcher.log` for the
-  helper-ready marker (`Helper service is ready: true`). **Skipped with a clear
-  message when not root or when tooling is missing** — so these scripts are
-  safe to run locally; they will not system-install.
+  helper-ready marker (`Helper service is ready: true`). The release workflow
+  makes this launch mandatory for the `.deb`; other environments skip with a
+  clear message when installation or launch tooling is unavailable.
+
+This smoke proves package installation, Electron startup, migrations, Linux
+helper selection, and the helper readiness handshake. It does not sign in,
+record audio, call Wispr's transcription service, or inject returned text.
 
 ```bash
 # Inspection-only locally (these will NOT install on a non-root box):

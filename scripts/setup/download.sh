@@ -9,13 +9,16 @@
 # Reads globals:
 #   project_root, work_dir, local_exe_path, electron_version, electron_arch
 # Sets globals:
-#   installer_exe_path   (path to the .exe used for this build)
+#   installer_exe_path      (path to the .exe used for this build)
+#   installer_resolved_sha  (manifest checksum for an auto-fetched installer)
 #
 # Network note: fetch_electron() and download_installer() perform real
 # downloads. download_installer() fetches the proprietary app from Wispr's
 # official endpoint unless you point it at a local --exe. Neither is exercised
 # by --test-flags (build.sh exits first).
 #===============================================================================
+
+installer_resolved_sha=''
 
 # Pick an available downloader. Echoes "wget" or "curl"; dies if neither.
 _downloader() {
@@ -45,8 +48,8 @@ _fetch() {
 #   * --exe absent (default): resolve the latest upstream URL and download it
 #     (see fetch_installer). The proprietary app is never bundled or committed
 #     to the repo -- it is fetched/supplied fresh each build.
-# A SHA-256 is verified IF one is known (WISPR_EXE_SHA256 env or installer.sha256
-# file). Upstream publishes no stable hash, so absence only warns.
+# A SHA-256 is verified from WISPR_EXE_SHA256, installer.sha256, or the official
+# manifest used by an automatic download. A local installer without one warns.
 #-------------------------------------------------------------------------------
 download_installer() {
 	say 'Locate Wispr Flow installer'
@@ -65,6 +68,8 @@ download_installer() {
 		expected_sha="$WISPR_EXE_SHA256"
 	elif [[ -f "$project_root/installer.sha256" ]]; then
 		expected_sha=$(awk '{print $1; exit}' "$project_root/installer.sha256")
+	elif [[ -n ${installer_resolved_sha:-} ]]; then
+		expected_sha="$installer_resolved_sha"
 	fi
 	verify_sha256 "$installer_exe_path" "$expected_sha" 'Wispr Flow installer' \
 		|| die 'Installer checksum verification failed'
@@ -84,12 +89,15 @@ fetch_installer() {
 	[[ -x $resolver ]] || die "installer resolver not found: $resolver"
 
 	auto 'No --exe supplied; resolving the latest Wispr Flow installer'
-	local resolved url version
+	local resolved url version sha256
 	resolved=$("$resolver") \
 		|| die 'Failed to resolve the Wispr Flow installer URL (pass --exe to use a local installer)'
 	url=$(printf '%s\n' "$resolved" | sed -nE 's/^URL=//p')
 	version=$(printf '%s\n' "$resolved" | sed -nE 's/^VERSION=//p')
+	sha256=$(printf '%s\n' "$resolved" | sed -nE 's/^SHA256=//p')
 	[[ -n $url ]] || die 'installer resolver returned no URL'
+	[[ -n $sha256 ]] || die 'installer resolver returned no SHA-256'
+	installer_resolved_sha="$sha256"
 
 	if [[ -n $version && $version != "${APP_VERSION:-}" ]]; then
 		die "upstream latest is ${version} but this build is pinned to ${APP_VERSION}.
