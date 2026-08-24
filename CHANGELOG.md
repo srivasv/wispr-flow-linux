@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Installer discovery now reads Wispr's official Windows release manifest
+  instead of parsing the redirected bootstrapper filename, and verifies the
+  published SHA-256 before packaging. Release CI now requires the `.deb` to
+  install and reach the Linux helper-ready state instead of silently degrading
+  to inspection-only coverage.
+
 ## [v1.0.5] - 2026-07-22
 
 ### Added

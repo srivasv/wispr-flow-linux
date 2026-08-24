@@ -63,14 +63,6 @@ jobs:
       - name: Make scripts executable
         run: chmod +x ./build.sh scripts/setup/resolve-installer-url.sh scripts/setup/fetch-helper-bin.sh
 
-      - name: Resolve and download Wispr Flow installer
-        run: |
-          scripts/setup/resolve-installer-url.sh > resolved.txt
-          url=$(grep '^URL=' resolved.txt | cut -d= -f2-)
-          [[ -n "$url" ]] || { echo "::error::no installer URL resolved"; exit 1; }
-          echo "Downloading installer: $url"
-          curl -fSL -o wispr-flow-setup.exe "$url"
-
       - name: Fetch pinned helper binary (x86_64)
         run: |
           echo "HELPER_BIN=$(scripts/setup/fetch-helper-bin.sh x86_64)" >> "$GITHUB_ENV"
@@ -83,7 +75,7 @@ jobs:
           fi
           # shellcheck disable=SC2086  # build_flags / TAG_FLAG are multi-word
           # flag strings that MUST word-split into separate argv entries.
-          ./build.sh ${{ inputs.build_flags }} --exe wispr-flow-setup.exe $TAG_FLAG
+          ./build.sh ${{ inputs.build_flags }} $TAG_FLAG
 
       - name: Collect built artifacts
         # build.sh writes outputs under the build-linux/ work dir: deb/ and

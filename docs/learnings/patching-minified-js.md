@@ -249,10 +249,9 @@ node -e '
 '
 ```
 
-`NO MATCH` means the regex is wrong for the current bundle. Note Wispr's
-`resolve-installer-url.sh` tracks the upstream `latest` redirect and does **not**
-pin a SHA-256 (the build logs `No SHA-256 hash … skipping verification`), so
-"the current bytes" is whatever `latest` resolves to right now — re-pull before
+`NO MATCH` means the regex is wrong for the current bundle. The resolver tracks
+Wispr's latest release manifest and verifies its published SHA-256, so "the
+current bytes" means the artifact named by that manifest. Re-resolve before
 testing rather than trusting a stale local extract.
 
 ## End-to-end verification (post-build)

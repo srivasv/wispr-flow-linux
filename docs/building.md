@@ -45,15 +45,15 @@ that one isn't a system package you install ahead of time.
 ## Obtaining the installer
 
 By default `build.sh` resolves and downloads the installer from Wispr's official
-endpoint (`scripts/setup/resolve-installer-url.sh`) — the same path CI uses. The
-proprietary installer is never committed to the repo.
+release manifest (`scripts/setup/resolve-installer-url.sh`) — the same path CI
+uses — and verifies its published SHA-256. The proprietary installer is never
+committed to the repo.
 
 To build against a specific installer instead, grab
 `Wispr Flow Setup-v<version>.exe` from [wisprflow.ai](https://wisprflow.ai) and
-pass it with `--exe`. The pinned version is **1.5.695** (set in `build.sh` as
-`APP_VERSION`); the auto-download verifies the upstream latest matches it and
-aborts on a mismatch, since a different installer version can drift the patch
-anchors.
+pass it with `--exe`. The pinned version is set in `build.sh` as `APP_VERSION`;
+the auto-download verifies the upstream latest matches it and aborts on a
+mismatch, since a different installer version can drift the patch anchors.
 
 ## Building
 

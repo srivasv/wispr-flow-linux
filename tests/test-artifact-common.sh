@@ -178,9 +178,8 @@ validate_app_contents() {
 #                  real setuid sandbox path.
 #     cmd [args]   the launch command
 #
-# Missing tools (xvfb-run/dbus-run-session/setsid, or runuser when run_as is
-# set) -> skip, not failure: loud failure on tool absence belongs at the CI
-# workflow layer.
+# Missing tools or a blocked Chromium sandbox normally skip. Set
+# WISPR_LAUNCH_REQUIRED=1 when launch readiness is a mandatory release gate.
 
 _smoke_launch_pid=''
 _smoke_cache_root=''
@@ -219,11 +218,19 @@ run_launch_smoke_test() {
 	local skip="Skipping launch smoke test for $label"
 	if ! { command -v xvfb-run && command -v dbus-run-session \
 		&& command -v setsid; } &>/dev/null; then
-		pass "$skip (xvfb-run/dbus-run-session/setsid missing)"
+		if [[ ${WISPR_LAUNCH_REQUIRED:-0} == 1 ]]; then
+			fail "$label launch tools missing"
+		else
+			pass "$skip (xvfb-run/dbus-run-session/setsid missing)"
+		fi
 		return
 	fi
 	if [[ -n $run_as ]] && ! command -v runuser &>/dev/null; then
-		pass "$skip (runuser missing)"
+		if [[ ${WISPR_LAUNCH_REQUIRED:-0} == 1 ]]; then
+			fail "$label runuser missing"
+		else
+			pass "$skip (runuser missing)"
+		fi
 		return
 	fi
 
@@ -287,7 +294,12 @@ run_launch_smoke_test() {
 		fi
 		# Namespace-sandbox denial is an environment limit, not a defect.
 		if _smoke_sandbox_denied "$launcher_log" "$xvfb_log"; then
-			pass "$label: SKIP - Chromium sandbox cannot initialize in this container (namespace creation denied by seccomp/userns policy); launch not exercised here."
+			if [[ ${WISPR_LAUNCH_REQUIRED:-0} == 1 ]]; then
+				fail "$label Chromium sandbox could not initialize"
+			else
+				pass "$label: SKIP - Chromium sandbox cannot initialize" \
+					'in this container; launch not exercised here.'
+			fi
 		else
 			fail "$detail"
 		fi
