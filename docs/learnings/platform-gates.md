@@ -150,8 +150,21 @@ backup, `node --check`s the result, and is idempotent (re-run = byte-identical).
 |---|---|---|
 | Menu offset + invisible window controls (remap `<html>` class linux→win32) | [`linux-renderer-chrome.sh`](../../scripts/patches/linux-renderer-chrome.sh) | `WISPR_LINUX_WIN32_CHROME` |
 | Chrome window fell to default framed + visible menu bar → make it frameless like win32 (1.5.695: the meeting_recorder window; the Hub/scratchpad windows now self-frame Linux via a two-way else branch) | [`linux-window-frame.sh`](../../scripts/patches/linux-window-frame.sh) | `WISPR_LINUX_FRAMELESS` |
+| Transparent Status surface retained a full 480x570 X11 input region → apply the renderer-reported rectangles with `BrowserWindow.setShape()` | [`linux-status-input-shape.sh`](../../scripts/patches/linux-status-input-shape.sh) | `WISPR_LINUX_X11_STATUS_SHAPE` |
 | Fresh installs seeded macOS `fn`/⌘ shortcut defaults + skipped the onboarding Permissions step → widen each renderer's `isWindows` **bind** to also be true on linux (bridge stays honest) | [`linux-renderer-treat-as-windows.sh`](../../scripts/patches/linux-renderer-treat-as-windows.sh) | `WISPR_LINUX_RENDERER_ISWIN` |
 | Cold-start `wispr-flow:` deep links dropped (parse was win32-only) → widen the argv-parse guard | [`linux-deeplink.sh`](../../scripts/patches/linux-deeplink.sh) | `WISPR_LINUX_DEEPLINK` |
+
+Wispr 1.6.606 ships a `StatusInputShape` manager fed by validated renderer
+`ReportAlphaCatchRects` messages, but only enables it under the Windows flag.
+On KDE X11, the Status window was mapped with a full 480x570 `ShapeInput`
+rectangle even while Wispr's alpha check reported zero. The Linux patch reuses
+that manager only when `DISPLAY` is set and `WAYLAND_DISPLAY` is absent. Empty
+reports use Wispr's existing off-surface sentinel because Electron treats
+`setShape([])` as a return to the full rectangular input region.
+
+The runtime gate deliberately leaves native Wayland unchanged. Electron 42
+cannot set compositor input regions there, so that separate limitation remains
+tracked in #44.
 
 `linux-renderer-treat-as-windows.sh` is the high-leverage one: per renderer it
 widens the *one* place `isWindows` is bound into a module-local
