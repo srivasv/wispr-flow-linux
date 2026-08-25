@@ -1,10 +1,11 @@
 #!/usr/bin/env bats
 #
 # linux-patches.bats
-# Unit tests for the five renderer/main bundle patches added for the Linux port:
+# Unit tests for the six renderer/main bundle patches added for the Linux port:
 #   * linux-renderer-chrome.sh           -> remaps the <html> platform class linux->win32
 #   * linux-window-frame.sh              -> frameless hub/settings window on Linux
 #   * linux-hub-focusable.sh             -> hub window focusable/WM-managed on Linux
+#   * linux-status-input-shape.sh        -> bounded Status input shape on X11
 #   * linux-renderer-treat-as-windows.sh -> widens each renderer's isWindows bind
 #                                           (bridge stays honest; no preload touched)
 #   * linux-deeplink.sh                  -> cold-start wispr-flow: argv parse on Linux
@@ -50,6 +51,17 @@ assert_idempotent() {
 	[[ "$output" == *lready\ patched* ]]
 	after=$(md5sum "$target" | cut -d' ' -f1)
 	[[ "$before" == "$after" ]]
+}
+
+write_status_shape_fixture() {
+	cat > "$FIX" <<'JS'
+const y={H8:!1},F={replaceWindow(){},setEnabled(){},applyReport(){return!0}},n={setIgnoreMouseEvents(){}},m={cr(){},cM(){},cA(){}};
+y.H8?F.replaceWindow(n):n.setIgnoreMouseEvents(!0,{forward:!0});
+const s=[{x:-2,y:-2,width:1,height:1}];
+class Shape{enabled=!1;everEnabled=!1;latestRects=[];applyShape(){}applyCurrentShape(){this.enabled?this.applyShape(this.latestRects):this.applyShape(this.everEnabled?s:[])}}
+function report(e,t){const n={webContents:e};if(n&&e===n.webContents)if(!0){if(y.H8){if(!F.applyReport(e,t))return;(0,m.cr)(n,t.shapeRects)}(0,m.cM)(n,t.rects),(0,m.cA)(n)}else return!1}
+const overlay={setIgnoreMouseEvents(){}};overlay.setIgnoreMouseEvents(!0);
+JS
 }
 
 # =============================================================================
@@ -163,6 +175,40 @@ JS
 	run bash "$PATCH_DIR/linux-hub-focusable.sh" "$FIX"
 	[[ "$status" -ne 0 ]]
 	! grep -q 'WISPR_LINUX_HUB_FOCUSABLE' "$FIX"
+}
+
+# =============================================================================
+# linux-status-input-shape.sh
+# =============================================================================
+
+@test "status-shape: uses renderer rectangles only on Linux X11" {
+	write_status_shape_fixture
+	run bash "$PATCH_DIR/linux-status-input-shape.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	[[ "$(grep -o 'WISPR_LINUX_X11_STATUS_SHAPE' "$FIX" | wc -l)" -eq 4 ]]
+	grep -qF '!!process.env.DISPLAY&&!process.env.WAYLAND_DISPLAY' "$FIX"
+	grep -qF 'F.replaceWindow(n)' "$FIX"
+	grep -qF 'F.setEnabled(!0)' "$FIX"
+	grep -qF 'F.applyReport(e,t)' "$FIX"
+	grep -qF 'this.latestRects.length' "$FIX"
+	grep -qF 'this.latestRects:s' "$FIX"
+	# The unrelated overlay keeps its shipped whole-window behavior.
+	grep -qF 'overlay.setIgnoreMouseEvents(!0)' "$FIX"
+	node_check "$FIX"
+}
+
+@test "status-shape: idempotent on second run" {
+	write_status_shape_fixture
+	bash "$PATCH_DIR/linux-status-input-shape.sh" "$FIX"
+	assert_idempotent "$PATCH_DIR/linux-status-input-shape.sh" "$FIX"
+}
+
+@test "status-shape: bails when any required anchor is absent" {
+	write_status_shape_fixture
+	sed -i 's/F\.applyReport(e,t)/F.applyStatusReport(e,t)/' "$FIX"
+	run bash "$PATCH_DIR/linux-status-input-shape.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	! grep -q 'WISPR_LINUX_X11_STATUS_SHAPE' "$FIX"
 }
 
 # =============================================================================

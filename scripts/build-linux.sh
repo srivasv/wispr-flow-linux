@@ -280,6 +280,12 @@ step3_patch_bundle() {
     auto "Running linux-hub-focusable.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/linux-hub-focusable.sh" "$target_bundle" \
       || warn "Hub-focusable patch failed -- see linux-hub-focusable.sh output above."
+    # Reuse Wispr's renderer-reported Status rectangles as a native X11 shape.
+    # Whole-window alpha polling can otherwise leave the transparent status
+    # surface blocking every app beneath its 480x570 bounds.
+    auto "Running linux-status-input-shape.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-input-shape.sh" "$target_bundle" \
+      || warn "Status-input-shape patch failed -- see output above."
     # Parse the wispr-flow: deep-link URL out of argv at cold start on Linux too
     # (the parse was win32-only; the warm-start second-instance path already works).
     auto "Running linux-deeplink.sh on $target_bundle"

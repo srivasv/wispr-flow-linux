@@ -8,8 +8,16 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.6] - 2026-08-24
+
 ### Fixed
 
+- On X11 the transparent portion of the 480x570 Status window could retain a
+  full input region and block clicks to applications beneath it. Linux X11 now
+  applies Wispr's renderer-reported Flow Bar rectangles through Electron's
+  native window shaping, while hidden bars retain an off-surface sentinel
+  instead of reverting to a full rectangle. Visible controls and native
+  Wayland behavior are unchanged. (#41)
 - Installer discovery now reads Wispr's official Windows release manifest
   instead of parsing the redirected bootstrapper filename, and verifies the
   published SHA-256 before packaging. Release CI now requires the `.deb` to
@@ -124,7 +132,10 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/wispr-flow-linux/wispr-flow-linux/compare/v1.0.3+wispr1.5.751...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.6+wispr1.6.606...HEAD
+[v1.0.6]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.5+wispr1.6.606...v1.0.6+wispr1.6.606
+[v1.0.5]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.4+wispr1.6.7...v1.0.5+wispr1.6.606
+[v1.0.4]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.3+wispr1.5.751...v1.0.4+wispr1.6.7
 [v1.0.3]: https://github.com/wispr-flow-linux/wispr-flow-linux/compare/v1.0.2+wispr1.5.751...v1.0.3+wispr1.5.751
 [v1.0.2]: https://github.com/wispr-flow-linux/wispr-flow-linux/compare/v1.0.1+wispr1.5.695...v1.0.2+wispr1.5.695
 [v1.0.1]: https://github.com/wispr-flow-linux/wispr-flow-linux/compare/v1.0.0+wispr1.5.695...v1.0.1+wispr1.5.695
