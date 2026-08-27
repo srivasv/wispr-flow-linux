@@ -1,28 +1,28 @@
 Origin: wispr-flow-linux
 Label: Wispr Flow for Linux (unofficial)
 Codename: stable
-Date: Tue, 25 Aug 2026 01:32:13 UTC
+Date: Thu, 27 Aug 2026 11:15:35 UTC
 Architectures: amd64 arm64
 Components: main
 Description: Unofficial Wispr Flow Linux packages
 MD5Sum:
- 3b6a6b2b95d238a7e24597cfe8a071ed 728 main/binary-amd64/Packages
- 6e6614162cd179027d389b4f35138c4b 487 main/binary-amd64/Packages.gz
+ d3e709224451b875ff7bd353c93977d1 728 main/binary-amd64/Packages
+ 1416f3025c1b3d18ec015b78a88d3b8a 488 main/binary-amd64/Packages.gz
  33bebdc04e8287e7ba714e510a1d678a 152 main/binary-amd64/Release
- c66f6bde54d03afa4a15f2c6c68de5dd 728 main/binary-arm64/Packages
- 2e2549caf656ebe7aa628d5840e8e033 488 main/binary-arm64/Packages.gz
+ bf7d4a8709508e5af4fce62ea54c651e 728 main/binary-arm64/Packages
+ 00b7eb6929369ee14c2b0ebc1e70d43e 488 main/binary-arm64/Packages.gz
  412ca31b3e1789e759c705f9a608cb66 152 main/binary-arm64/Release
 SHA1:
- 00f0357bb4e8b80e34e1616f50cad8d5ed7857a5 728 main/binary-amd64/Packages
- 8555bea5ba8fca5ea9d1695c07235903e19b4a95 487 main/binary-amd64/Packages.gz
+ 6eb9690f11943e139f4f87ad0a1c6de9392d1db8 728 main/binary-amd64/Packages
+ 705b7e01439567de6b9492c5a83c2f9a6d1accd2 488 main/binary-amd64/Packages.gz
  6d66a3290d86b75bddcbb284acbe9ee9f5136618 152 main/binary-amd64/Release
- 7c8db629023afe50e62e143fed6adc5936c48628 728 main/binary-arm64/Packages
- 66623125ce421d084cc980274d1271b6013e741a 488 main/binary-arm64/Packages.gz
+ 645026bc74c691e3bcc3d65cbce1c2ea7eb934c6 728 main/binary-arm64/Packages
+ 240cbd4cc5f1edf8b45008a1009b21cc21d879c5 488 main/binary-arm64/Packages.gz
  ab77f53438167a35e7fea1bc08594cc97b7d84ab 152 main/binary-arm64/Release
 SHA256:
- 3810b9e5369e7072ba34e1ecd6026f8919adf744f251d7c22c5cf6f8800eb98c 728 main/binary-amd64/Packages
- 27aa67e8a280c11a6bb6ed4d6c2619ef2aa6faf75c3867967d43e210ee23bd27 487 main/binary-amd64/Packages.gz
+ eff7b6a1e2b496a3ecfdf5f5b4b872d9b301da0148a0599ca276ad98d2ea5ed6 728 main/binary-amd64/Packages
+ 5b9deb68e57e90ceea8a7133de7cc31c4f24efd2216e4f2ab49f9bc568e0cf86 488 main/binary-amd64/Packages.gz
  1b254ed55b1f89653cec5acbd63fc81146c59a0cc85675bcf6d44fbf01e7f787 152 main/binary-amd64/Release
- cdb57bd5da82b8c03479b3047a9363c0b5cb206bb1863d6098396dda3ad70e7e 728 main/binary-arm64/Packages
- 26b70cd00153dff50b48fe121c8d4a57caed88105f96bb17f8a908529dd09d24 488 main/binary-arm64/Packages.gz
+ a39be112eefff82e620891474e470eded1e8cce09e44688dd980a29e360a0046 728 main/binary-arm64/Packages
+ 1d9b9acfba1e2fe6d42d68a8de8b08f76d14c3cb4845d1377fd3027a6174d687 488 main/binary-arm64/Packages.gz
  30dbacec30a5fffb69e559b4cfd8b24ec400d84ba14f8fa50e63bb5c4d262d06 152 main/binary-arm64/Release
