@@ -19,7 +19,7 @@
 }:
 let
   pname = "wispr-flow";
-  version = "1.6.675";
+  version = "1.6.721";
 
   #============================================================================
   # Source: the user-supplied Wispr Flow Windows installer (a Squirrel .exe).
