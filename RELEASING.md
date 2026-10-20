@@ -74,6 +74,26 @@ Before the first real release:
   keeps the binaries in `gh-pages` and the smoke tests skip; once
   live, binaries are stripped and served by 302-redirect to Release assets.
 
+## Renew the version-tracker token
+
+`GH_PAT` authenticates checkout and Git pushes in `check-wispr-version.yml`
+and updates the `WISPR_FLOW_VERSION` repository variable.
+
+1. Create a fine-grained personal access token owned by the fork owner, scoped
+   only to this repository, with **Contents: read and write** and
+   **Variables: read and write**. Set an expiration and plan to renew it.
+2. Replace the Actions secret without putting the token in shell history:
+
+   ```bash
+   gh secret set GH_PAT --repo <owner>/wispr-flow-linux
+   ```
+
+3. Run `check-wispr-version.yml` manually and confirm it succeeds. If a newer
+   upstream version exists, this pushes a version commit and a release tag,
+   which starts the package build and publish chain.
+4. Revoke the old token after verification. A successful no-update run verifies
+   checkout, but does not exercise Git pushes or variable writes.
+
 ## Two release flavors
 
 - **Upstream-tracking retag (no human action).** `check-wispr-version` runs

@@ -47,12 +47,11 @@
 # reused unchanged). On mac/win the override is a no-op, so the patch cannot
 # regress those platforms.
 #
-# Anchor (unique in the bundle), keyed on the stable string literal -- NOT on
-# the minified symbols, which are derived from nearby developer strings so the
-# patch survives re-minification (see the "Patch" section below):
-#   `${_.ZI}\\Release\\Wispr Flow Helper.exe`);if(!<fs>().existsSync(<var>))
-# We split it at  `...Helper.exe`);  and  if(!<fs>().existsSync(<var>))
-# inserting the Linux override (which reassigns the derived <var>) between them.
+# Anchor on the existsSync guard's "Helper service script path not found"
+# error. Derive the result variable and logger at this call site: newer bundles
+# move the path calculation into a separate webpack module with its own logger.
+# The declaration immediately before the guard may be an inline ternary or a
+# function call; change const to let and insert the override before the guard.
 #
 # The override re-derives the resources root locally (process.resourcesPath)
 # rather than trusting the minified `_.ZI` symbol, so the patch is robust even
@@ -61,7 +60,7 @@
 #
 # stdio / fd-3 / exec-bit notes: see PATCH NOTES at the bottom of this file.
 #===============================================================================
-set -euo pipefail
+set -uo pipefail
 
 BUNDLE="${1:-}"
 if [[ -z "$BUNDLE" ]]; then
@@ -88,49 +87,34 @@ if [[ ! -f "$BUNDLE.orig" ]]; then
 fi
 
 # --- Patch (all minified symbols DERIVED from stable developer strings) -------
-# Minified identifiers (the logger accessor, the fs accessor, the resolver
-# result variable) churn every release, so we do NOT hardcode them. Instead we
-# anchor on developer strings that survive minification and read the live
-# identifiers back out of the match:
-#
-#   * logger accessor   <- the literal  "Running packaged Windows Helper service"
-#   * resolver variable <- the literal  `Wispr Flow Helper.exe`  + existsSync(...)
-#   * resolver decl     <- the property  isHelperProcessRunningManually  (+ var)
-#
-# The override reassigns the DERIVED variable and logs via the DERIVED logger,
-# so a future re-minify that renames s/d/l still patches correctly (or fails
-# loudly with a clear "could not derive" error -- never a silent no-op).
-python3 - "$BUNDLE" "$LINUX_MARKER" <<'PY'
+# Derive the caller's logger and result variable from the helper error guard.
+# The path factory's logger can have a different name or scope in newer bundles.
+python3 - "$BUNDLE" "$LINUX_MARKER" <<'PY' || exit 1
 import sys, io, re
 path, marker = sys.argv[1], sys.argv[2]
 with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
     data = f.read()
 
-# 1) Logger accessor, from the packaged-Windows-helper log line (stable string).
-lg = set(re.findall(r'([\w$]+)\(\)\.info\("Running packaged Windows Helper service"', data))
-if len(lg) != 1:
-    sys.exit(f"ERROR: could not uniquely derive logger symbol (candidates: {sorted(lg)}).")
-LOG = lg.pop()
-
-# 2) Anchor A: stable win-path literal + the existsSync guard. Capture the
-#    resolver variable; the override is inserted just before this guard.
+# The resolver is now a separate function. Anchor on its caller's existence
+# guard and error, deriving the logger in THIS module rather than the resolver's.
 anchorA = re.compile(
-    r'Wispr Flow Helper\.exe`\);'
-    r'(?P<guard>if\(!(?P<fs>[\w$]+)\(\)\.existsSync\((?P<var>[\w$]+)\)\))'
+    r'(?P<guard>if\(![\w$]+\(\)\.existsSync\((?P<var>[\w$]+)\)\)'
+    r'return (?:void )?(?P<logger>[\w$]+)\(\)\.error\('
+    r'"Helper service script path not found")'
 )
 ma = list(anchorA.finditer(data))
 if len(ma) != 1:
     sys.exit(f"ERROR: expected exactly 1 existsSync resolver anchor, found {len(ma)}.")
-VAR = ma[0].group('var')
+match = ma[0]
+VAR = match.group('var')
+LOG = match.group('logger')
 
-# 3) Resolver declaration: const <VAR>=...isHelperProcessRunningManually? -> let.
-#    `s` is const, so the override's reassignment would throw without this flip.
-declRe = re.compile(
-    r'const(\s+)' + re.escape(VAR) +
-    r'(=[\w$]+\.[\w$]+\?[\w$]+\.[\w$]+\.isHelperProcessRunningManually\?)'
-)
-if len(declRe.findall(data)) != 1:
-    sys.exit(f"ERROR: expected exactly 1 'const {VAR}=...isHelperProcessRunningManually' decl.")
+# Support both the original inline ternary and the extracted function call.
+# Only change the declaration immediately before the verified helper guard.
+declRe = re.compile(r'const(\s+)' + re.escape(VAR) + r'=[^;]+;$')
+decl = declRe.search(data[:match.start()])
+if decl is None:
+    sys.exit(f"ERROR: could not derive const {VAR} declaration before helper guard.")
 
 # Build the Linux override against the DERIVED logger + resolver variable.
 override = (
@@ -141,11 +125,10 @@ override = (
     + VAR + '=_wlp;}'
 )
 
-# Apply with lambda replacements (no regex-DSL backref interpolation on the
-# replacement side): const->let first, then insert the override.
-data = declRe.sub(lambda m: 'let' + m.group(1) + VAR + m.group(2), data, count=1)
-data = anchorA.sub(lambda m: 'Wispr Flow Helper.exe`);' + override + m.group('guard'),
-                   data, count=1)
+data = (
+    data[:decl.start()] + 'let' + data[decl.start() + len('const'):match.start()]
+    + override + data[match.start():]
+)
 
 with io.open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
     f.write(data)
@@ -174,7 +157,7 @@ fi
 echo "OK: Linux helper-path branch inserted into $BUNDLE"
 echo
 echo "Patched resolver now does (conceptually):"
-echo "  const s = isMac ? <mac> : <win>;"
+echo "  let s = resolveHelperPath();"
 echo "  if (process.platform === 'linux')"
 echo "    s = path.join(process.resourcesPath, 'Release', 'wispr-flow-linux-helper');"
 echo "  if (!fs.existsSync(s)) { ...feature dead... }"
