@@ -50,7 +50,7 @@ record audio, call Wispr's transcription service, or inject returned text.
 # Inspection-only locally (these will NOT install on a non-root box):
 tests/test-artifact-rpm.sh       build-linux/rpm/rpmbuild/RPMS/x86_64
 tests/test-artifact-deb.sh       build-linux/deb
-tests/test-artifact-appimage.sh  build-linux/appimage   # extracts AppImage or uses staged AppDir
+tests/test-artifact-appimage.sh  build-linux/appimage   # needs unsquashfs for AppImage; also accepts staged AppDir
 ```
 
 > One thing I'll keep shouting about: do NOT `sudo rpm -i` / `sudo dpkg -i` the

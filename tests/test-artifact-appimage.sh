@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Integration tests for Wispr Flow AppImage artifacts.
 #
-# Accepts either a built *.AppImage (extracted via --appimage-extract) or, as a
+# Accepts either a built *.AppImage (extracted via unsquashfs) or, as a
 # fallback, the staged AppDir the maker leaves under build-linux/appimage when
 # appimagetool isn't installed. All structure/content checks run with no
 # install; the optional headless launch runs the built AppImage and degrades to
@@ -32,13 +32,23 @@ if [[ -n $appimage_file ]]; then
 	pass "Found AppImage: $(basename "$appimage_file")"
 	chmod +x "$appimage_file" 2>/dev/null || true
 	assert_executable "$appimage_file"
+	if ! command -v unsquashfs >/dev/null 2>&1; then
+		fail 'unsquashfs is required to inspect packaged directory permissions'
+		print_summary
+	fi
 	extract_dir=$(mktemp -d)
-	if (cd "$extract_dir" && "$appimage_file" --appimage-extract >/dev/null 2>&1) \
-		&& [[ -d "$extract_dir/squashfs-root" ]]; then
-		pass "--appimage-extract succeeded"
+	# The runtime's --appimage-extract creates dirs as 0700, hiding stored modes.
+	offset=$("$appimage_file" --appimage-offset) || {
+		fail 'Could not resolve AppImage SquashFS offset'
+		print_summary
+	}
+	if unsquashfs -o "$offset" -d "$extract_dir/squashfs-root" \
+		"$appimage_file" >/dev/null 2>&1; then
+		pass 'unsquashfs extraction succeeded (stored permissions preserved)'
 		appdir="$extract_dir/squashfs-root"
 	else
-		pass "Skipping extract (--appimage-extract unavailable); trying staged AppDir"
+		fail 'Could not extract AppImage filesystem'
+		print_summary
 	fi
 fi
 
