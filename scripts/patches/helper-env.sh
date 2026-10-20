@@ -45,9 +45,12 @@
 #
 #   env:{...process.env,sentryDSN:...}   (marker comment carries the grep token)
 #
+# Newer bundles pass env:R() instead; wrap it as
+# {...process.env,...R()} to preserve the factory and its override precedence.
+#
 # stdio / fd-3 / exec-bit notes live in helper-resolver.sh PATCH NOTES.
 #===============================================================================
-set -euo pipefail
+set -uo pipefail
 
 BUNDLE="${1:-}"
 if [[ -z "$BUNDLE" ]]; then
@@ -74,27 +77,27 @@ if [[ ! -f "$BUNDLE.orig" ]]; then
 fi
 
 # --- Patch (anchored on stable string/property literals, no minified ids) -----
-python3 - "$BUNDLE" "$ENV_MARKER" <<'PY'
-import sys, io
+python3 - "$BUNDLE" "$ENV_MARKER" <<'PY' || exit 1
+import sys, io, re
 path, marker = sys.argv[1], sys.argv[2]
 with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
     data = f.read()
 
-# The helper spawn site: 4-pipe stdio (fd 3 = IPC channel) + the telemetry-only
-# replacement env. Unique in the bundle; if upstream ever spreads process.env
-# itself, the `...process.env` check below makes this a clean no-op.
-anchor = 'stdio:["pipe","pipe","pipe","pipe"],env:{'
-n = data.count(anchor)
-if n != 1:
-    sys.exit(f"ERROR: expected exactly 1 helper-spawn env anchor, found {n}.")
-
-after = data[data.find(anchor) + len(anchor):]
-if after.startswith("...process.env") or after.startswith(f"/*{marker}*/"):
-    sys.exit(0)  # already spreads the parent env -- nothing to do
-
-# Insert the marker comment + spread at the front of the env object literal.
-repl = anchor + f"/*{marker}*/...process.env,"
-data = data.replace(anchor, repl, 1)
+# Four pipes uniquely identify the helper. New bundles use an env factory;
+# spread its result after process.env so upstream overrides keep precedence.
+anchor = re.compile(
+    r'(?P<prefix>stdio:\["pipe","pipe","pipe","pipe"\],env:)'
+    r'(?:(?P<factory>[\w$]+\(\))|\{)'
+)
+matches = list(anchor.finditer(data))
+if len(matches) != 1:
+    sys.exit(f"ERROR: expected exactly 1 helper-spawn env anchor, found {len(matches)}.")
+match = matches[0]
+factory = match.group('factory')
+replacement = match.group('prefix') + '{' + f"/*{marker}*/...process.env,"
+if factory:
+    replacement += '...' + factory + '}'
+data = data[:match.start()] + replacement + data[match.end():]
 
 with io.open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
     f.write(data)

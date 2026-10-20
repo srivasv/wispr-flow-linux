@@ -77,7 +77,7 @@
 #
 # Usage: patch-linux-window-frame.sh <path-to-.webpack/main/index.js>
 #===============================================================================
-set -euo pipefail
+set -uo pipefail
 
 BUNDLE="${1:-}"
 if [[ -z "$BUNDLE" ]]; then
@@ -109,7 +109,7 @@ fi
 # widened to also match linux. We assert the match count and set a per-site
 # flag; a partial application (some sites widened, some missed because the
 # bundle layout changed) emits a WARNING: line that CI greps for.
-python3 - "$BUNDLE" "$LINUX_MARKER" <<'PY'
+python3 - "$BUNDLE" "$LINUX_MARKER" <<'PY' || exit 1
 import sys, io, re
 path, marker = sys.argv[1], sys.argv[2]
 with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
@@ -128,9 +128,12 @@ with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
 site = re.compile(
     r'("win32"===process\.platform)'                      # g1: win32 predicate
     r'(&&Object\.assign\((?P<var>[\w$]+),'                # g2: &&assign( + var
-    r'\{titleBarStyle:"hidden",autoHideMenuBar:!0\}\))'   # ...hidden cfg )
+    r'\{titleBarStyle:"hidden",(?:frame:!1,)?autoHideMenuBar:!0\}\))'   # ...hidden cfg )
 )
 matches = list(site.finditer(data))
+
+# Newer bundles add frame:!1 between titleBarStyle and autoHideMenuBar.
+# Preserve that property while widening the same platform predicate.
 
 # How many window configs of this shape SHOULD exist. The 1.5.695 audit found
 # exactly one (the meeting_recorder window). If the bundle ever sprouts another

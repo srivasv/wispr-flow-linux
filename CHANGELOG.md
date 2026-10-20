@@ -8,6 +8,17 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.7] - 2026-10-20
+
+### Fixed
+
+- Same-repository pull requests in a fork no longer get closed by the
+  maintainer-edits check, which now compares source and destination repositories.
+- Package builds support upstream's extracted helper-path and environment
+  functions and the meeting window's added frame property. Linux patches
+  retain their unique-anchor and shipped-marker checks, with regression
+  coverage for both the original inline and newer function forms.
+
 ## [v1.0.6] - 2026-08-24
 
 ### Fixed

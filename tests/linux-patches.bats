@@ -65,6 +65,106 @@ JS
 }
 
 # =============================================================================
+# Helper launch anchors (upstream extracted these into functions in 1.6.x).
+# =============================================================================
+
+@test "helper-resolver: overrides a function-returned path with the local logger" {
+	cat > "$FIX" <<'JS'
+function launch(){const s=(0,f.j)();if(!d().existsSync(s))return l().error("Helper service script path not found",{customAttributes:{serviceScriptPath:s}});return s}
+function other(){s().info("Running packaged Windows Helper service")}
+JS
+	run bash "$PATCH_DIR/helper-resolver.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	grep -qF 'l().info("Running packaged Linux Helper service"' "$FIX"
+	node - "$FIX" <<'JS'
+const fs=require("fs"),vm=require("vm"),assert=require("assert");
+for(const platform of ["linux","win32","darwin"]){
+ const result=vm.runInNewContext(fs.readFileSync(process.argv[2],"utf8")+";launch()",{
+  process:{platform,resourcesPath:"/resources"},require,
+  f:{j:()=>"original-helper"},d:()=>({existsSync:()=>true}),
+  l:()=>({info(){},error(){throw Error("unexpected missing helper")}})
+ });
+ assert.equal(result,platform==="linux"?
+  "/resources/Release/wispr-flow-linux-helper":"original-helper");
+}
+JS
+	node_check "$FIX"
+	assert_idempotent "$PATCH_DIR/helper-resolver.sh" "$FIX"
+}
+
+@test "helper-resolver: keeps the inline resolver supported" {
+	cat > "$FIX" <<'JS'
+function launch(){const $s=f.tD?E.ty.isHelperProcessRunningManually?"dev-mac":"mac":E.ty.isHelperProcessRunningManually?"dev-win":(l().info("Running packaged Windows Helper service"),`${_.ZI}\\Release\\Wispr Flow Helper.exe`);if(!d().existsSync($s))return void l().error("Helper service script path not found");return $s}
+JS
+	run bash "$PATCH_DIR/helper-resolver.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	node_check "$FIX"
+	assert_idempotent "$PATCH_DIR/helper-resolver.sh" "$FIX"
+}
+
+@test "helper-resolver: rejects missing or duplicate helper guards unchanged" {
+	printf '%s\n' 'const s=path();if(!fs().existsSync(s))returnValue();' > "$FIX"
+	run bash "$PATCH_DIR/helper-resolver.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	cmp "$FIX" "$FIX.orig"
+	cat > "$FIX" <<'JS'
+function a(){const s=path();if(!fs().existsSync(s))return log().error("Helper service script path not found")}
+function b(){const t=path();if(!fs().existsSync(t))return log().error("Helper service script path not found")}
+JS
+	cp "$FIX" "$FIX.orig"
+	run bash "$PATCH_DIR/helper-resolver.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	cmp "$FIX" "$FIX.orig"
+}
+
+@test "helper-env: spreads session env before factory values and preserves stdio" {
+	cat > "$FIX" <<'JS'
+const R=()=>({sentryDSN:"telemetry",DISPLAY:"override"});
+const child=spawn(helper,{stdio:["pipe","pipe","pipe","pipe"],env:R()});
+JS
+	run bash "$PATCH_DIR/helper-env.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	node - "$FIX" <<'JS'
+const fs=require("fs"),vm=require("vm"),assert=require("assert");
+let options;
+vm.runInNewContext(fs.readFileSync(process.argv[2],"utf8"),{
+ process:{env:{WAYLAND_DISPLAY:"wayland-0",DISPLAY:":0"}},helper:"helper",
+ spawn:(path,opts)=>{options=opts}
+});
+assert.equal(options.env.WAYLAND_DISPLAY,"wayland-0");
+assert.equal(options.env.DISPLAY,"override");
+assert.equal(options.env.sentryDSN,"telemetry");
+assert.equal(options.stdio.length,4);
+JS
+	assert_idempotent "$PATCH_DIR/helper-env.sh" "$FIX"
+}
+
+@test "helper-env: keeps inline env supported and rejects absent anchors" {
+	printf '%s\n' 'spawn(s,{stdio:["pipe","pipe","pipe","pipe"],env:{sentryDSN:b.kL}});' > "$FIX"
+	run bash "$PATCH_DIR/helper-env.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	grep -qF '...process.env,sentryDSN:b.kL' "$FIX"
+	assert_idempotent "$PATCH_DIR/helper-env.sh" "$FIX"
+	printf '%s\n' 'spawn(s,{stdio:["pipe","pipe","pipe"],env:{}});' > "$FIX"
+	cp "$FIX" "$FIX.orig"
+	run bash "$PATCH_DIR/helper-env.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	cmp "$FIX" "$FIX.orig"
+}
+
+@test "window-frame: accepts the added frame property without changing it" {
+	cat > "$FIX" <<'JS'
+const t={};"win32"===process.platform&&Object.assign(t,{titleBarStyle:"hidden",frame:!1,autoHideMenuBar:!0});
+JS
+	run bash "$PATCH_DIR/linux-window-frame.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	grep -qF '"win32"===process.platform||"linux"===process.platform' "$FIX"
+	grep -qF '{titleBarStyle:"hidden",frame:!1,autoHideMenuBar:!0}' "$FIX"
+	node_check "$FIX"
+	assert_idempotent "$PATCH_DIR/linux-window-frame.sh" "$FIX"
+}
+
+# =============================================================================
 # linux-renderer-chrome.sh
 # =============================================================================
 

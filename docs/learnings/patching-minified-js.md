@@ -297,6 +297,23 @@ Four layers: build log, syntactic validity, asar markers, runtime.
    ran), and the helper IPC handshake completed — far more than a structure
    check.
 
+## Extracted functions can change scope without changing developer strings
+
+The 1.6.1174 and 1.6.1209 bundles move helper-path resolution into a separate
+webpack module and helper environment creation into a factory. The old patches
+fail because the Windows path literal no longer sits beside `existsSync`, and
+`env:{...}` becomes `env:R()`. The meeting window also adds `frame:!1` between
+`titleBarStyle` and `autoHideMenuBar`.
+
+Anchor the helper override at the caller's existence guard and its literal
+`Helper service script path not found` error. Derive the logger there too:
+the logger beside `Running packaged Windows Helper service` now belongs to a
+different module and can resolve to an unrelated binding in the caller.
+Wrap an environment factory as `{...process.env,...R()}` so its values still
+win, and retain the four-pipe IPC topology. Keep the old inline fixtures and
+new function fixtures in `tests/linux-patches.bats`; require a unique match
+before writing either form.
+
 ## Cross-references
 
 - [platform-gates.md](platform-gates.md) — the darwin/win32 carve-outs Linux
