@@ -61,7 +61,7 @@ jobs:
         if: matrix.format != 'rpm'
         run: |
           sudo apt-get update
-          sudo apt-get install -y file libfuse2 nodejs npm \
+          sudo apt-get install -y file libfuse2 nodejs npm squashfs-tools \
             xvfb dbus-x11 procps wl-clipboard
 
       - name: Verify smoke-test tools are present (Ubuntu)

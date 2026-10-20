@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.8] - 2026-10-20
+
+### Fixed
+
+- AppImage validation inspects stored directory permissions with `unsquashfs`
+  instead of the runtime extractor, which creates private `0700` directories
+  even when the image correctly stores `0755` modes.
+
 ## [v1.0.7] - 2026-10-20
 
 ### Fixed
