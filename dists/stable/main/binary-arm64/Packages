@@ -1,17 +1,17 @@
 Package: wispr-flow
-Version: 1.6.1209-1.0.8
+Version: 1.6.1264-1.0.9
 Architecture: arm64
 Maintainer: Wispr Flow Linux (unofficial)
-Installed-Size: 596344
+Installed-Size: 597524
 Depends: wl-clipboard
 Recommends: xclip, xsel
 Priority: optional
 Section: utils
-Filename: pool/main/w/wispr-flow/wispr-flow_1.6.1209-1.0.8_arm64.deb
-Size: 270087954
-SHA256: 66327ab0765a357ea0ee03b6fb24bc94eab3485d26bb6c1d9c22da55063e7ea3
-SHA1: b4ffb3ec0c5cc9ff48ffd68d678a724d3f1a3d74
-MD5sum: ea0591b4f76177370c1aa8e4355d5f44
+Filename: pool/main/w/wispr-flow/wispr-flow_1.6.1264-1.0.9_arm64.deb
+Size: 268760900
+SHA256: af2d02b834251e17ddcf5985ec51e9d03b3a18b7f037b512012e13fa9b5c6f11
+SHA1: ce38a0aae21853446b9a88b7fcc4825f259ebb8f
+MD5sum: 27fa2ff1812e77fecad597bf899124b8
 Description: Wispr Flow voice dictation for Linux (unofficial build)
  Unofficial repackaging of the Wispr Flow voice-dictation app for Linux, with
  a clean-room Rust helper providing text injection, active-app detection, and
