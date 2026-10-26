@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.9] - 2026-10-26
+
 ### Fixed
 
 - Wispr Flow 1.6.1264 package builds accept the async Applications-folder
