@@ -8,6 +8,13 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Wispr Flow 1.6.1264 package builds accept the async Applications-folder
+  guard, added Hub web preferences, and comma-sequence deep-link guard.
+  Adapted from upstream PR #136 (fixing upstream issue #135), with regression
+  coverage for old and new bundle shapes.
+
 ## [v1.0.8] - 2026-10-20
 
 ### Fixed
