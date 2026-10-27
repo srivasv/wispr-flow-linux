@@ -47,7 +47,7 @@
 #
 # Usage: linux-status-idle-unmap.sh <path-to-.webpack/main/index.js>
 #===============================================================================
-set -uo pipefail
+set -euo pipefail
 
 # shellcheck source=scripts/patches/_lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"

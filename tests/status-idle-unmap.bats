@@ -29,7 +29,7 @@ JS
 	cmp "$FIX.before" "$FIX"
 }
 
-@test "surface-report emits the initial empty semantic report on Linux" {
+@test "surface-report reports the idle pill and the initial empty scan on Linux" {
 	cp "$BATS_TEST_DIRNAME/fixtures/status-surface.js" "$FIX"
 	bash "$PATCH_DIR/linux-status-surface-report.sh" "$FIX"
 	# Execute the actual patched collector with an empty DOM. No pixel polling.

@@ -1,20 +1,74 @@
 #!/usr/bin/env bash
-# Include Linux in the Status renderer's visual-only surface reporting, and
-# emit the initial empty report. Paired with linux-status-idle-unmap.sh.
-# Reuses the existing rectangle collector; no pixel sampling or new IPC API.
-set -uo pipefail
+#===============================================================================
+# linux-status-surface-report.sh -- let the Status renderer report its visible
+# surfaces on Linux, and send the initial report, in the renderer bundle
+# (.webpack/renderer/status/index.js).
+#
+# WHY THIS PATCH EXISTS
+# ---------------------
+# linux-status-idle-unmap.sh unmaps the Status window while the renderer
+# reports no visible surface, so the idle transparent canvas stops swallowing
+# clicks. It reads upstream's own status:reportAlphaCatchRects report, which
+# has two platform gaps on Linux:
+#
+#   * shapeRects (the visual-only surfaces: the idle pill's own shape, the
+#     hover tooltip, the language pill) are only filled when upstream's
+#     platform flag says Windows, and the collector's selector omits
+#     data-status-window-shape on Linux, so those elements are never even
+#     scanned; and
+#   * the collector reports only when a rectangle changes, so a Status window
+#     that maps with nothing to report never sends one and the shim cannot
+#     tell "no surface" from "no report yet".
+#
+# The click-through rectangles (rects) are platform-neutral; only the shape
+# half is gated.
+#
+# THE ANCHOR
+# ----------
+# The collector is a webpack module that
+#
+#   * contains the developer string "flow-bar-hot-area" (the Status renderer's
+#     own surface registration) exactly once,
+#   * declares `const s="data-alpha-catch"` (the click-through attribute),
+#   * reads the platform flag `i.H8` exactly three times inside the collector:
+#     the remeasure dispatcher, the per-element shape test, and the initial
+#     scan's selector; and
+#   * registers `status-window-shape-remeasure` then scans once.
+#
+# The module opening and end are found structurally, the platform-flag read is
+# captured by name, and the three reads are asserted before anything is
+# written. Matches exactly once in 1.6.1209 and 1.6.1264 (the same module
+# shape also shipped on 1.6.897 and 1.6.1147).
+#
+# THE PATCH
+# ---------
+# 1. Each of the three platform-flag reads becomes
+#      (<flag>||"linux"===window.electron.platform.os)
+#    so Linux fills shapeRects from the same elements Windows does and scans
+#    for them. The idle pill's hot area (registered through upstream's own
+#    hook into rects) is platform-neutral and is reported on Linux unchanged.
+# 2. The initial scan is followed by the report queue's flush
+#    (`<queue>(),()=>`), so the shim receives one report even when the window
+#    maps with no surfaces.
+#
+# Verified against 1.6.1209 and 1.6.1264.
+#
+# Usage: linux-status-surface-report.sh <path-to-.webpack/renderer/status/index.js>
+#===============================================================================
+set -euo pipefail
 
 # shellcheck source=scripts/patches/_lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
 patch_begin "WISPR_LINUX_STATUS_SURFACE_REPORT" "${1:-}"
 
 if ! python3 - "$BUNDLE" "$MARKER" <<'PY'
+import io
 import re
 import sys
-from pathlib import Path
 
 path, marker = sys.argv[1:]
-source = Path(path).read_text()
+with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
+    source = f.read()
 Q = r'[`"\']'
 ID = r'[\w$]+'
 
@@ -59,7 +113,8 @@ collector = (collector[:initial.end()] .removesuffix('()=>') + queue + '(),()=>'
              + collector[initial.end():])
 collector = collector.replace(gate, '(' + gate + '||"linux"===window.electron.platform.os)')
 patched = source[:start] + '/*' + marker + '*/' + collector + source[end:]
-Path(path).write_text(patched)
+with io.open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
+    f.write(patched)
 print('Patched Status visual surfaces and initial report for Linux')
 PY
 then

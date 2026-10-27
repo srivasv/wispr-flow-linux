@@ -11,6 +11,14 @@ const node = {
     getBoundingClientRect: () => ({left: 10, top: 20, width: 30, height: 40}),
     closest: () => null,
 };
+// The idle pill's hot area: upstream registers it through the collector's own
+// hook, not through an attribute, so it lands in rects on every platform.
+const pill = {
+    hasAttribute: () => false,
+    getAttribute: () => null,
+    getBoundingClientRect: () => ({left: 100, top: 200, width: 220, height: 44}),
+    closest: () => null,
+};
 const ctx = {
     Map, Set, WeakMap, Promise, Number, Array, String,
     window: {electron: {platform: {os: 'linux'}}, innerWidth: 512, innerHeight: 586,
@@ -48,4 +56,18 @@ ctx.collector({}, exportsObject, load);
     elements = []; mutation();
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     assert.equal(reports.at(-1).shapeRects.length, 0);
+    // The default shown idle pill registers its hot area through upstream's
+    // own hook (the way renderer/status/index.js does for
+    // "flow-bar-hot-area"). It must still produce a report on Linux, so the
+    // idle-unmap shim keeps a visible pill mapped.
+    exportsObject.Yh('flow-bar-hot-area', {current: pill}, 'idle:ready', 0, false);
+    await Promise.resolve(); await Promise.resolve();
+    assert.deepEqual(JSON.parse(JSON.stringify(reports.at(-1).rects)),
+        [{x: 100, y: 200, width: 220, height: 44}]);
+    // Upstream hiding the pill drops the hot area; the report empties and the
+    // shim may unmap.
+    exportsObject.Yh('flow-bar-hot-area', {current: pill}, 'idle:ready', 0, true);
+    await Promise.resolve(); await Promise.resolve();
+    assert.equal(reports.at(-1).rects.length, 0);
+    console.log('PASS: default shown idle pill reports its hot area');
 })().catch(error => { console.error(error); process.exitCode = 1; });
