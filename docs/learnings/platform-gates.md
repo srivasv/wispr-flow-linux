@@ -190,6 +190,7 @@ reports use Wispr's existing off-surface sentinel because Electron treats
 The runtime gate deliberately leaves native Wayland unchanged. Electron 42
 cannot set compositor input regions there, so that separate limitation remains
 tracked in #44.
+| Every start re-ran `app.setAsDefaultProtocolClient("wispr-flow")`, which on Linux is `xdg-settings set default-url-scheme-handler`, and xdg-utils 1.1.3's GNOME backend also makes the desktop file the default `text/html` handler each time (#75) → short-circuit the call on Linux; the desktop entry's `MimeType=x-scheme-handler/wispr-flow;` registers the scheme | [`linux-protocol-registration.sh`](../../scripts/patches/linux-protocol-registration.sh) | `WISPR_LINUX_PROTOCOL_REGISTRATION` |
 
 `linux-renderer-treat-as-windows.sh` is the high-leverage one: per renderer it
 widens the *one* place `isWindows` is bound into a module-local
@@ -262,10 +263,9 @@ Linux).
 
 **Correct by design, don't "fix":** keycode tables, Cmd-vs-Ctrl accelerators,
 ⌘/⌥ glyph labels, `shouldMuteAudio` defaulting false, Squirrel update hooks
-(Linux uses deb/rpm/AppImage), single-instance lock and protocol registration
-(platform-neutral).
+(Linux uses deb/rpm/AppImage), single-instance lock (platform-neutral).
 
-**Earlier versions of this page were wrong on two points.** First,
+**Earlier versions of this page were wrong on three points.** First,
 `setLoginItemSettings` is a no-op on Linux in Electron and writes no XDG
 autostart entry. A fresh 1.6.937 profile runs the new-user hook that sets it,
 and no `autostart/` directory appears. The `openAtLogin` pref defaults to true
@@ -277,6 +277,11 @@ at runtime. `WISPR_APP_SUPPORT_DIR` and `WISPR_LOG_DIR` are exports to child
 processes, set from `app.getPath()` after startup. They override nothing, and
 every database path went through the `~/Library` constant until
 `linux-xdg-data-dir.sh` (#100).
+Third, protocol registration is not platform-neutral. On Linux Electron
+implements `setAsDefaultProtocolClient` by running `xdg-settings`, whose
+1.1.3 GNOME backend sets the `text/html` default as a side effect, and the
+app repeats the call at every start (#75). `linux-protocol-registration.sh`
+skips it and the desktop entry declares the scheme.
 
 ## How to re-run this audit on a new Wispr version
 
