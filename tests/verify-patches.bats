@@ -48,6 +48,7 @@ declare -gA MARKER_SAMPLES=(
 	[x11statusshape]='/*WISPR_LINUX_X11_STATUS_SHAPE*/globalThis.__wisprLinuxX11StatusShape=(()=>{try{return!1}catch(e){return!1}})();'
 	[statusidle]='/*WISPR_LINUX_STATUS_IDLE_UNMAP*/'
 	[statussurface]='/*WISPR_LINUX_STATUS_SURFACE_REPORT*/'
+	[statuswindowvis]='ke=async()=>{/*WISPR_LINUX_STATUS_VIS_WATCHDOG*/{const w=u.RA.statusWindow;w&&!w.isDestroyed()&&!w.isAlwaysOnTop()&&w.setAlwaysOnTop(!0,"screen-saver");}if("active"!==u.RA.systemState)return;const e=performance.now();if(u.RA.statusWindow&&!u.RA.statusWindow.isDestroyed())try{}}'
 )
 
 # Write a fixture app.asar-like file containing every marker, except the one
