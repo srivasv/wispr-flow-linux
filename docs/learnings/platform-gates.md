@@ -150,9 +150,33 @@ backup, `node --check`s the result, and is idempotent (re-run = byte-identical).
 |---|---|---|
 | Menu offset + invisible window controls (remap `<html>` class linux→win32) | [`linux-renderer-chrome.sh`](../../scripts/patches/linux-renderer-chrome.sh) | `WISPR_LINUX_WIN32_CHROME` |
 | Chrome window fell to default framed + visible menu bar → make it frameless like win32 (1.5.695: the meeting_recorder window; the Hub/scratchpad windows now self-frame Linux via a two-way else branch) | [`linux-window-frame.sh`](../../scripts/patches/linux-window-frame.sh) | `WISPR_LINUX_FRAMELESS` |
-| Transparent Status surface retained a full 480x570 X11 input region → apply the renderer-reported rectangles with `BrowserWindow.setShape()` | [`linux-status-input-shape.sh`](../../scripts/patches/linux-status-input-shape.sh) | `WISPR_LINUX_X11_STATUS_SHAPE` |
 | Fresh installs seeded macOS `fn`/⌘ shortcut defaults + skipped the onboarding Permissions step → widen each renderer's `isWindows` **bind** to also be true on linux (bridge stays honest) | [`linux-renderer-treat-as-windows.sh`](../../scripts/patches/linux-renderer-treat-as-windows.sh) | `WISPR_LINUX_RENDERER_ISWIN` |
 | Cold-start `wispr-flow:` deep links dropped (parse was win32-only) → widen the argv-parse guard | [`linux-deeplink.sh`](../../scripts/patches/linux-deeplink.sh) | `WISPR_LINUX_DEEPLINK` |
+| Status-pill drag-to-reposition can never complete (client-side absolute window positioning has no native-Wayland equivalent) and strands an input-blocking dimming overlay → force the drag-overlay activation flag false on Linux | [`linux-disable-pill-drag.sh`](../../scripts/patches/linux-disable-pill-drag.sh) | `WISPR_LINUX_DISABLE_PILL_DRAG` |
+| Fresh Linux profiles were **seeded** with macOS chords, so push-to-talk landed on keycode `-1` (no Linux key) — blank PTT in Settings, no way past the onboarding shortcuts step (#33, #46) → widen the win32 flag *inside the main bundle's shortcuts module only* | [`linux-main-shortcut-defaults.sh`](../../scripts/patches/linux-main-shortcut-defaults.sh) | `WISPR_LINUX_MAIN_SHORTCUT_DEFAULTS` |
+| The app data dir (database, meetings, backups, extension state) and the logs dir took the macOS arm, so Linux wrote `~/Library/Application Support/Wispr Flow` (#100) → a Linux arm under `$XDG_CONFIG_HOME/Wispr Flow`, the dir Windows also shares with Electron's `userData`; the launcher moves an existing legacy dir over | [`linux-xdg-data-dir.sh`](../../scripts/patches/linux-xdg-data-dir.sh) | `WISPR_LINUX_XDG_DATA_DIR` |
+| "Open at login" wrote nothing and `wasOpenedAtLogin` was always false, because Electron's login-item API is macOS/Windows only, so the Hub opened on every launch (#81) → replace `app.set/getLoginItemSettings` on Linux with an XDG autostart entry whose `Exec=` carries `--hidden` (no call-site anchors; the three callers are tripwires) | [`linux-autostart.sh`](../../scripts/patches/linux-autostart.sh) + [`linux-autostart.js`](../../scripts/patches/linux-autostart.js) | `WISPR_LINUX_AUTOSTART` |
+| The Flow Bar rendered but never took the mouse on X11 and XWayland: off Windows the status window's input is a whole-window `setIgnoreMouseEvents` toggle driven by an alpha hit-test poll, and that poll misses (`capturePage` throws `UnknownVizError`, the XWayland cursor point goes stale) (#41) → run the shipped Windows-only StatusInputShape manager under an Ozone-X11 gate and unignore instead of polling | [`linux-status-x11-shape.sh`](../../scripts/patches/linux-status-x11-shape.sh) | `WISPR_LINUX_X11_STATUS_SHAPE` |
+
+`linux-status-x11-shape.sh` leans on how Electron 42 maps both calls on X11.
+`setShape(rects)` sets the window's ShapeBounding region (Chromium
+`X11Window::UpdateWindowRegion`); `setIgnoreMouseEvents(true)` sets ShapeInput
+to a 1x1 rectangle and `false` resets it (`native_window_views.cc`). The SHAPE
+extension intersects input with bounding, so a window clipped to the pill and
+left unignored takes clicks on the pill only. A probe on kwin_x11 confirmed it:
+with a 100x100 bounding rect and input reset, pointer motion arrived inside
+the rect and fell through outside; with ignore on, nothing arrived even inside
+the shape. Two traps: `setShape([])` on X11 yields an empty bounding region
+(invisible, unhittable), not the "back to rectangular" the Electron docs
+promise, so the patch maps an empty list to the manager's off-surface
+sentinel; and the gate must follow the Ozone backend, not the environment
+alone, because the launcher's `WISPR_USE_X11=1` runs X11 with
+`WAYLAND_DISPLAY` set. A third one showed up on the desktop, not in the
+bundle reading: a toast that clears sends `EnableMouseEvents(false)` without
+stopping the poll, because upstream counts on the next poll tick to restore
+input. With the poll gone that left the pill dead after the first "Undo"
+toast, so on X11 that message keeps the input on. Native Wayland is
+untouched (#44).
 
 Wispr 1.6.606 ships a `StatusInputShape` manager fed by validated renderer
 `ReportAlphaCatchRects` messages, but only enables it under the Windows flag.
@@ -165,6 +189,7 @@ reports use Wispr's existing off-surface sentinel because Electron treats
 The runtime gate deliberately leaves native Wayland unchanged. Electron 42
 cannot set compositor input regions there, so that separate limitation remains
 tracked in #44.
+| Every start re-ran `app.setAsDefaultProtocolClient("wispr-flow")`, which on Linux is `xdg-settings set default-url-scheme-handler`, and xdg-utils 1.1.3's GNOME backend also makes the desktop file the default `text/html` handler each time (#75) → short-circuit the call on Linux; the desktop entry's `MimeType=x-scheme-handler/wispr-flow;` registers the scheme | [`linux-protocol-registration.sh`](../../scripts/patches/linux-protocol-registration.sh) | `WISPR_LINUX_PROTOCOL_REGISTRATION` |
 
 `linux-renderer-treat-as-windows.sh` is the high-leverage one: per renderer it
 widens the *one* place `isWindows` is bound into a module-local
@@ -192,6 +217,31 @@ correctly wants the Windows branch. The OS-API danger class lives in the **main*
 bundle and gates on `process.platform`/`H8`, which this renderer-only patch never
 touches.
 
+### The main bundle needed its own, narrower cut
+
+Being renderer-only is also this patch's blind spot. The default shortcut map
+lives in a module *shared* by both bundles, and the profile is written by the
+**main** process — where the same flag is `"win32"===process.platform`, i.e.
+false on Linux. So the renderer showed Windows chords while main persisted the
+macOS ones, and a fresh `config.json` came out as
+`"shortcuts":{"-1":"ptt","-1+32":"popo",...},"modifierShortcut":"9"`. Since `-1`
+is the "no keycode on this platform" sentinel, push-to-talk was literally
+unpressable: the key monitor delivered events that matched nothing, Settings
+rendered the binding blank, and onboarding could not be completed. That is the
+one bug behind both #33 and #46.
+
+The fix could **not** be "widen `H8` at its definition" — in the main bundle it
+has ~79 consumers and does gate the real Windows-only OS-API class (registry,
+`%LOCALAPPDATA%` path resolution, Windows exit-code semantics). So
+[`linux-main-shortcut-defaults.sh`](../../scripts/patches/linux-main-shortcut-defaults.sh)
+widens the flag only where it is *read inside the shortcuts module*. An audit of
+1.6.774 found the module reads it at **8** sites and every one selects a Windows
+chord against a macOS chord (default map, default modifier, four polish-prompt /
+meeting-recorder chord sets, two PTT-display accessors) — so all 8 are widened
+together, and the patch **fails closed** if any read there is ever not a ternary,
+rather than silently widening an OS gate. Fixing only the PTT default would have
+left its siblings seeding `-1` (e.g. `"-1+77"` for `open_meeting_recorder`).
+
 **Still gated out, deliberately deferred (known limits, not patched):**
 
 - **Meeting features behind `tD`** — speaker attribution, meeting auto-detect,
@@ -212,11 +262,25 @@ Linux).
 
 **Correct by design, don't "fix":** keycode tables, Cmd-vs-Ctrl accelerators,
 ⌘/⌥ glyph labels, `shouldMuteAudio` defaulting false, Squirrel update hooks
-(Linux uses deb/rpm/AppImage), `setLoginItemSettings` auto-launch (Electron
-writes an XDG autostart `.desktop` on Linux), single-instance lock and protocol
-registration (platform-neutral). The macOS `~/Library/...` path strings that
-leak into the Linux ternary are never read at runtime — `WISPR_APP_SUPPORT_DIR`
-/ `WISPR_LOG_DIR` override them from `app.getPath()`.
+(Linux uses deb/rpm/AppImage), single-instance lock (platform-neutral).
+
+**Earlier versions of this page were wrong on three points.** First,
+`setLoginItemSettings` is a no-op on Linux in Electron and writes no XDG
+autostart entry. A fresh 1.6.937 profile runs the new-user hook that sets it,
+and no `autostart/` directory appears. The `openAtLogin` pref defaults to true
+regardless, so it says nothing about how the app was started (#69, #82).
+`linux-autostart.sh` now backs both login-item methods with an XDG entry
+(#81).
+Second, the macOS `~/Library/...` path strings in the platform module are read
+at runtime. `WISPR_APP_SUPPORT_DIR` and `WISPR_LOG_DIR` are exports to child
+processes, set from `app.getPath()` after startup. They override nothing, and
+every database path went through the `~/Library` constant until
+`linux-xdg-data-dir.sh` (#100).
+Third, protocol registration is not platform-neutral. On Linux Electron
+implements `setAsDefaultProtocolClient` by running `xdg-settings`, whose
+1.1.3 GNOME backend sets the `text/html` default as a side effect, and the
+app repeats the call at every start (#75). `linux-protocol-registration.sh`
+skips it and the desktop entry declares the scheme.
 
 ## How to re-run this audit on a new Wispr version
 

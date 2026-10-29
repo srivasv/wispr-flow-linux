@@ -6,7 +6,7 @@
 # (the .asar stores the JS bundle as concatenated plaintext, so a byte-grep
 # finds the markers without unpacking).
 #
-# verify-patches.sh greps a fixed set of markers (10 fixed strings + 1 Perl
+# verify-patches.sh greps a fixed set of markers (16 fixed strings + 1 Perl
 # regex). We build a tiny fixture carrying those exact marker strings (PASS)
 # and per-marker fixtures that omit one (FAIL).
 #
@@ -28,6 +28,8 @@ teardown() {
 # Sample lines, each carrying exactly one marker the script greps for.
 # Keyed by a short name so the negative tests can omit one at a time.
 declare -gA MARKER_SAMPLES=(
+	[dictationaudio]='/*WISPR_LINUX_DICTATION_AUDIO*/'
+	[audioworker]='/*WISPR_LINUX_DICTATION_AUDIO_RUNTIME*/'
 	[branch]='if (process.env.WISPR_LINUX_HELPER_BRANCH) { return "linux"; }'
 	[logline]='console.log("Running packaged Linux Helper service", { serviceScriptPath: p });'
 	[stagedpath]='const s = path.join(resourcesPath, "Release", "wispr-flow-linux-helper");'
@@ -36,9 +38,20 @@ declare -gA MARKER_SAMPLES=(
 	[chrome]='e.classList.add(/*WISPR_LINUX_WIN32_CHROME*/"linux"===w.electron.platform.os?"win32":w.electron.platform.os);'
 	[windowframe]='"win32"===process.platform||"linux"===process.platform/*WISPR_LINUX_FRAMELESS*/&&Object.assign(t,{titleBarStyle:"hidden"});'
 	[hubfocusable]='webPreferences:{preload:p("../renderer","hub","preload.js"),devTools:d},focusable:/*WISPR_LINUX_HUB_FOCUSABLE*/"linux"===process.platform};'
-	[statusshape]='const x=/*WISPR_LINUX_X11_STATUS_SHAPE*/"linux"===process.platform;'
 	[treataswindows]='const x=((y?.platform?.isWindows??!1)||"linux"===y?.platform?.os)/*WISPR_LINUX_RENDERER_ISWIN*/;'
 	[deeplink]='if(f.H8||"linux"===process.platform){/*WISPR_LINUX_DEEPLINK*/const e=process.argv.find(x=>x.startsWith("wispr-flow:"));}'
+	[protocolregistration]='t=("linux"===process.platform/*WISPR_LINUX_PROTOCOL_REGISTRATION*/||e.app.setAsDefaultProtocolClient("wispr-flow")),n().info("Protocol registration success:",t)'
+	[earlysingleton]='/*WISPR_LINUX_EARLY_SINGLETON_V1*/try{var __wisprApp=require("electron").app;if(__wisprApp&&!__wisprApp.requestSingleInstanceLock()){__wisprApp.quit(),process.exit(0)}}catch(__wisprErr){}'
+	[pilldrag]='re=e=>{e=(/*WISPR_LINUX_DISABLE_PILL_DRAG*/"linux"===process.platform)?!1:e}'
+	[shortcutdefaults]='(r.H8||"linux"===process.platform)/*WISPR_LINUX_MAIN_SHORTCUT_DEFAULTS*/?pe:ce'
+	[autostart]='/*WISPR_LINUX_AUTOSTART*/;(function(){if(process.platform!=="linux")return;})();'
+	[xdgdatadir]='f=u?o().join(process.env.APPDATA||"","Wispr Flow"):("linux"===process.platform/*WISPR_LINUX_XDG_DATA_DIR*/?o().join(process.env.XDG_CONFIG_HOME||o().join(i().homedir(),".config"),"Wispr Flow"):o().join(i().homedir(),"Library","Application Support","Wispr Flow"))'
+	[statuscompact]='return(/*WISPR_LINUX_STATUS_COMPACT*/"linux"===process.platform)?{x:0}:{x:1}'
+	[pickeranchor]='(0,g.Bn)(A.RA.contextMenuWindow,d.qM.ShowAutoPolishPicker,/*WISPR_LINUX_PICKER_ANCHOR*/((p,b)=>b&&p?{...p}:p)(e,b))'
+	[x11statusshape]='/*WISPR_LINUX_X11_STATUS_SHAPE*/globalThis.__wisprLinuxX11StatusShape=(()=>{try{return!1}catch(e){return!1}})();'
+	[statusidle]='/*WISPR_LINUX_STATUS_IDLE_UNMAP*/'
+	[statussurface]='/*WISPR_LINUX_STATUS_SURFACE_REPORT*/'
+	[statuswindowvis]='ke=async()=>{/*WISPR_LINUX_STATUS_VIS_WATCHDOG*/{const w=u.RA.statusWindow;w&&!w.isDestroyed()&&!w.isAlwaysOnTop()&&w.setAlwaysOnTop(!0,"screen-saver");}if("active"!==u.RA.systemState)return;const e=performance.now();if(u.RA.statusWindow&&!u.RA.statusWindow.isDestroyed())try{}}'
 )
 
 # Write a fixture app.asar-like file containing every marker, except the one
@@ -148,9 +161,9 @@ write_fixture() {
 	[[ "$output" == *'MISSING'* ]]
 }
 
-@test "verify: exits 1 when the status-shape marker is missing" {
+@test "verify: exits 1 when the protocol-registration marker is missing" {
 	local fixture
-	fixture="$(write_fixture statusshape)"
+	fixture="$(write_fixture protocolregistration)"
 	run "$VERIFY_SH" "$fixture"
 	[[ "$status" -eq 1 ]]
 	[[ "$output" == *'MISSING'* ]]
@@ -167,6 +180,54 @@ write_fixture() {
 @test "verify: exits 1 when the deeplink marker is missing" {
 	local fixture
 	fixture="$(write_fixture deeplink)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the early-singleton marker is missing" {
+	local fixture
+	fixture="$(write_fixture earlysingleton)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the pilldrag marker is missing" {
+	local fixture
+	fixture="$(write_fixture pilldrag)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the shortcut-defaults marker is missing" {
+	local fixture
+	fixture="$(write_fixture shortcutdefaults)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the statuscompact marker is missing" {
+	local fixture
+	fixture="$(write_fixture statuscompact)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the picker-anchor marker is missing" {
+	local fixture
+	fixture="$(write_fixture pickeranchor)"
+	run "$VERIFY_SH" "$fixture"
+	[[ "$status" -eq 1 ]]
+	[[ "$output" == *'MISSING'* ]]
+}
+
+@test "verify: exits 1 when the X11 status-shape marker is missing" {
+	local fixture
+	fixture="$(write_fixture x11statusshape)"
 	run "$VERIFY_SH" "$fixture"
 	[[ "$status" -eq 1 ]]
 	[[ "$output" == *'MISSING'* ]]

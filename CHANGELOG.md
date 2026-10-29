@@ -8,6 +8,29 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Added
+
+- Upstream XDG autostart and data-directory support, helper v0.1.3, native
+  module pins, and installer checksum pinning.
+- Scripted push-to-talk coverage from upstream #142's test-only commit.
+
+### Fixed
+
+- Reconcile upstream #148's X11 shape lifecycle with Wispr 1.6.1297,
+  retaining the older handler and validated viewport fallback.
+- Import #132 idle visibility, #73 visibility watchdog, #145 dictation audio,
+  and #129 protocol registration fixes.
+- Abort launch on profile migration conflicts; preserve the original MIME
+  configuration if its atomic replacement fails.
+- Failed patches restore their immediate input, preserving earlier patches.
+- AppImage update metadata follows the repository that builds the release.
+
+### Changed
+
+- Reconcile upstream packaging and CI while retaining fork APT hosting,
+  required launch checks, and disabled DNF/AUR publishing.
+
+
 ## [v1.0.9] - 2026-10-26
 
 ### Fixed

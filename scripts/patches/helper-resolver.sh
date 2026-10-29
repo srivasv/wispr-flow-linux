@@ -16,150 +16,130 @@
 # not exist on Linux -> existsSync() fails -> "Helper service script path not
 # found" -> the entire text-injection feature is dead.
 #
-# EXACT CURRENT CODE (recovered from extract/app/.webpack/main/index.js,
-# byte offset ~3663489; see docs/reference/ipc-contract.md S8). Minified
-# symbols: f.tD = ("darwin"===process.platform) i.e. isMac;
-#          _.ZI = the resources root dir (parent of the Release/ folder);
+# UPSTREAM CODE, two shapes so far (see docs/reference/ipc-contract.md S8).
+# Minified symbols churn per release; the names below are 1.6.897's:
+#          f.tD = ("darwin"===process.platform) i.e. isMac;
+#          S.ZI = the resources root dir (parent of the Release/ folder);
 #          E.ty.isHelperProcessRunningManually = dev-mode flag;
 #          d() = node:fs; l() = logger.
+#
+# Inline, through 1.6.897 (the ternary sits in the spawn function):
 #
 #   const s = f.tD
 #     ? E.ty.isHelperProcessRunningManually
 #         ? (l().info("Running Dev Mac Helper service"),
-#            `${_.ZI}/swift-helper-app/DerivedData/Wispr Flow Helper/Build/Products/Debug/Wispr Flow.app/Contents/MacOS/Wispr Flow`)
+#            `${S.ZI}/swift-helper-app/DerivedData/Wispr Flow Helper/Build/Products/Debug/Wispr Flow.app/Contents/MacOS/Wispr Flow`)
 #         : (l().info("Running packaged Mac Helper service"),
-#            `${_.ZI}/swift-helper-app-dist/Wispr Flow.app/Contents/MacOS/Wispr Flow`)
-#     : E.ty.isHelperProcessRunningManually
+#            `${S.ZI}/swift-helper-app-dist/Wispr Flow.app/Contents/MacOS/Wispr Flow`)
+#     : E.ty.isHelperProcessRunningManually || !a.app.isPackaged
 #         ? (l().info("Running Dev Windows Helper service"),
-#            `${_.ZI}\\windows-helper-app\\Wispr Flow Helper\\Release\\Wispr Flow Helper.exe`)
+#            `${S.ZI}\\windows-helper-app\\Wispr Flow Helper\\Release\\Wispr Flow Helper.exe`)
 #         : (l().info("Running packaged Windows Helper service"),
-#            `${_.ZI}\\Release\\Wispr Flow Helper.exe`);
+#            `${S.ZI}\\Release\\Wispr Flow Helper.exe`);
 #   if(!d().existsSync(s)) return void l().error("Helper service script path not found", ...);
+#
+# Own module, since 1.6.937 (the same ternary is the body of an exported
+# arrow function; the spawn function and the meeting recorder's native
+# capture both call it):
+#
+#   const l = () => o.tD ? a.ty.isHelperProcessRunningManually ? (...) : (...)
+#                        : a.ty.isHelperProcessRunningManually || !r.app.isPackaged ? (...) : (...);
+#   ...
+#   const s = (0, f.j)(); if(!d().existsSync(s)) return void l().error(...);
 #
 # THE PATCH (surgical, one insertion point)
 # -----------------------------------------
 # We do NOT rewrite the nested ternary (fragile to re-derive in minified code
-# and risks the mac/win paths). Instead we insert a single Linux *override*
-# immediately AFTER the resolver assignment and BEFORE the existsSync() guard.
-# When running on Linux we reassign `s` to the bundled Rust helper, staged at
-#   ${resourcesRoot}/Release/wispr-flow-linux-helper
-# (forward slashes; same Release/ folder the Windows helper used, so _.ZI is
-# reused unchanged). On mac/win the override is a no-op, so the patch cannot
-# regress those platforms.
+# and risks the mac/win paths). Instead we PREPEND a Linux case to it:
+#   const s = "linux"===process.platform
+#     ? (l().info("Running packaged Linux Helper service"),
+#        path.join(process.resourcesPath, "Release", "wispr-flow-linux-helper"))
+#     : f.tD ? <mac> : <win>;
+# On mac/win the new case is false, so the patch cannot regress them.
 #
-# Anchor on the existsSync guard's "Helper service script path not found"
-# error. Derive the result variable and logger at this call site: newer bundles
-# move the path calculation into a separate webpack module with its own logger.
-# The declaration immediately before the guard may be an inline ternary or a
-# function call; change const to let and insert the override before the guard.
+# Since 1.6.937 the ternary lives in its own exported resolver
+# (`const l=()=>f.tD?...`) and the caller does `const s=(0,f.j)();
+# if(!fs().existsSync(s))`, so an anchor on the existsSync guard no longer
+# works. The ternary head is the same in both shapes, and it is keyed on stable
+# strings (the Dev-Mac log line and isHelperProcessRunningManually), not on
+# minified symbols.
 #
-# The override re-derives the resources root locally (process.resourcesPath)
-# rather than trusting the minified `_.ZI` symbol, so the patch is robust even
-# if `_.ZI` is something other than process.resourcesPath. On a packaged build
-# process.resourcesPath is the directory that contains Release/ and app.asar.
+# The Linux case uses process.resourcesPath rather than the minified `_.ZI`
+# resources-root symbol. On a packaged build process.resourcesPath is the
+# directory that contains Release/ and app.asar.
 #
 # stdio / fd-3 / exec-bit notes: see PATCH NOTES at the bottom of this file.
 #===============================================================================
-set -uo pipefail
+set -euo pipefail
 
-BUNDLE="${1:-}"
-if [[ -z "$BUNDLE" ]]; then
-  # default to the in-repo extracted bundle
-  BUNDLE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/extract/app/.webpack/main/index.js"
-fi
+# shellcheck source=scripts/patches/_lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_lib.sh"
+patch_begin "WISPR_LINUX_HELPER_BRANCH" "${1:-}" "extract/app/.webpack/main/index.js"
 
-if [[ ! -f "$BUNDLE" ]]; then
-  echo "ERROR: bundle not found: $BUNDLE" >&2
-  exit 1
-fi
-
-# --- Idempotency guard --------------------------------------------------------
-LINUX_MARKER="WISPR_LINUX_HELPER_BRANCH"
-if grep -q "$LINUX_MARKER" "$BUNDLE"; then
-  echo "Already patched ($LINUX_MARKER present in $BUNDLE) - nothing to do."
-  exit 0
-fi
-
-# --- Backup -------------------------------------------------------------------
-if [[ ! -f "$BUNDLE.orig" ]]; then
-  cp -p "$BUNDLE" "$BUNDLE.orig"
-  echo "Backup written: $BUNDLE.orig"
-fi
-
-# --- Patch (all minified symbols DERIVED from stable developer strings) -------
-# Derive the caller's logger and result variable from the helper error guard.
-# The path factory's logger can have a different name or scope in newer bundles.
-python3 - "$BUNDLE" "$LINUX_MARKER" <<'PY' || exit 1
+# --- Patch (the one minified symbol used is DERIVED from a developer string) --
+# The logger accessor churns every release, so it is not hardcoded: it is read
+# out of the "Running packaged Windows Helper service" log line. The insertion
+# point is the ternary head, located by the isHelperProcessRunningManually
+# property and the "Running Dev Mac Helper service" log line. Nothing else in
+# the bundle is referenced, so a re-minify that renames every symbol still
+# patches correctly, or fails loudly on the exactly-one assertion -- never a
+# silent no-op.
+python3 - "$BUNDLE" "$MARKER" <<'PY'
 import sys, io, re
 path, marker = sys.argv[1], sys.argv[2]
 with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
     data = f.read()
 
-# The resolver is now a separate function. Anchor on its caller's existence
-# guard and error, deriving the logger in THIS module rather than the resolver's.
-anchorA = re.compile(
-    r'(?P<guard>if\(![\w$]+\(\)\.existsSync\((?P<var>[\w$]+)\)\)'
-    r'return (?:void )?(?P<logger>[\w$]+)\(\)\.error\('
-    r'"Helper service script path not found")'
-)
-ma = list(anchorA.finditer(data))
-if len(ma) != 1:
-    sys.exit(f"ERROR: expected exactly 1 existsSync resolver anchor, found {len(ma)}.")
-match = ma[0]
-VAR = match.group('var')
-LOG = match.group('logger')
+# Any JS string delimiter. A bundler swap can re-emit every "literal" as a
+# `literal` (docs/learnings/patching-minified-js.md, "Quote style"), so no
+# anchor below spells a quote.
+Q = r'[`"\']'
 
-# Support both the original inline ternary and the extracted function call.
-# Only change the declaration immediately before the verified helper guard.
-declRe = re.compile(r'const(\s+)' + re.escape(VAR) + r'=[^;]+;$')
-decl = declRe.search(data[:match.start()])
-if decl is None:
-    sys.exit(f"ERROR: could not derive const {VAR} declaration before helper guard.")
+# 1) Logger accessor, from the packaged-Windows-helper log line (stable string).
+lg = set(re.findall(
+    r'([\w$]+)\(\)\.info\(' + Q + r'Running packaged Windows Helper service' + Q,
+    data))
+if len(lg) != 1:
+    sys.exit(f"ERROR: could not uniquely derive logger symbol (candidates: {sorted(lg)}).")
+LOG = lg.pop()
 
-# Build the Linux override against the DERIVED logger + resolver variable.
-override = (
-    'if("linux"===process.platform){/*' + marker + '*/'
-    'const _wlp=require("path").join(process.resourcesPath,"Release","wispr-flow-linux-helper");'
-    + LOG + '().info("Running packaged Linux Helper service",'
-    '{customAttributes:{serviceScriptPath:_wlp}});'
-    + VAR + '=_wlp;}'
+# 2) Anchor: the head of the resolver's isMac ternary, keyed on the Dev-Mac log
+#    line (stable string) and the isHelperProcessRunningManually property.
+#    We PREPEND a Linux case to the ternary rather than inserting a statement
+#    after it, so the anchor holds for both shapes Wispr has shipped:
+#      <=1.6.897  const s=isMac?...:...;if(!fs().existsSync(s))...   (inline)
+#      >=1.6.937  const l=()=>isMac?...:...   (own module; caller does
+#                 `const s=(0,f.j)();if(!fs().existsSync(s))`)
+#    No variable is reassigned, so no const->let flip is needed either.
+head = re.compile(
+    r'(?=[\w$]+\.[\w$]+\?[\w$]+\.[\w$]+\.isHelperProcessRunningManually\?\('
+    + re.escape(LOG) + r'\(\)\.info\(' + Q + r'Running Dev Mac Helper service' + Q + r'\))'
 )
+if len(head.findall(data)) != 1:
+    sys.exit(f"ERROR: expected exactly 1 helper-resolver ternary head, found {len(head.findall(data))}.")
 
-data = (
-    data[:decl.start()] + 'let' + data[decl.start() + len('const'):match.start()]
-    + override + data[match.start():]
+linux_case = (
+    '"linux"===process.platform/*' + marker + '*/?(' + LOG +
+    '().info("Running packaged Linux Helper service"),'
+    'require("path").join(process.resourcesPath,"Release","wispr-flow-linux-helper")):'
 )
+data = head.sub(lambda m: linux_case, data, count=1)
 
 with io.open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
     f.write(data)
-print(f"Patched: derived logger={LOG!r}, resolver var={VAR!r}; "
-      f"const->let + Linux override inserted (1 each).")
+print(f"Patched: derived logger={LOG!r}; Linux case prepended to the resolver ternary.")
 PY
 
 # --- Verify the result --------------------------------------------------------
-if ! grep -q "$LINUX_MARKER" "$BUNDLE"; then
-  echo "ERROR: post-patch verification failed (marker not found)." >&2
-  echo "       Restoring backup." >&2
-  cp -p "$BUNDLE.orig" "$BUNDLE"
-  exit 1
-fi
+patch_verify_marker
 
 # Syntax-check: the override inserts a real JS statement; catch a replacement
 # that serializes but doesn't parse before it ever reaches asar.
-if command -v node >/dev/null; then
-  if ! node --check "$BUNDLE"; then
-    echo "ERROR: node --check failed on patched bundle. Restoring backup." >&2
-    cp -p "$BUNDLE.orig" "$BUNDLE"
-    exit 1
-  fi
-  echo "node --check OK"
-fi
-echo "OK: Linux helper-path branch inserted into $BUNDLE"
+patch_finish "Linux helper-path branch inserted into $BUNDLE"
 echo
 echo "Patched resolver now does (conceptually):"
-echo "  let s = resolveHelperPath();"
-echo "  if (process.platform === 'linux')"
-echo "    s = path.join(process.resourcesPath, 'Release', 'wispr-flow-linux-helper');"
+echo "  s = linux ? path.join(process.resourcesPath, 'Release', 'wispr-flow-linux-helper')"
+echo "      : isMac ? <mac> : <win>;"
 echo "  if (!fs.existsSync(s)) { ...feature dead... }"
 echo
 echo "Stage the helper at: <resourcesPath>/Release/wispr-flow-linux-helper (exec bit set)."
@@ -192,10 +172,8 @@ echo "Stage the helper at: <resourcesPath>/Release/wispr-flow-linux-helper (exec
 #    to the no-op `stub` injector -> text injection is silently dead. This is
 #    NOT harmless; helper-env.sh prepends `...process.env,` to fix it.
 #
-# 4. PATH ROOT -- the override uses process.resourcesPath (robust) instead of
-#    the minified _.ZI symbol. On a packaged build both resolve to the dir that
-#    contains Release/ and app.asar. If you prefer to mirror _.ZI exactly,
-#    replace the require("path").join(...) expression with
-#    `${_.ZI}/Release/wispr-flow-linux-helper` -- but process.resourcesPath is
+# 4. PATH ROOT -- the Linux case uses process.resourcesPath (robust) instead
+#    of the minified resources-root symbol. On a packaged build both resolve to
+#    the dir that contains Release/ and app.asar, and process.resourcesPath is
 #    safer across forge layouts.
 #===============================================================================

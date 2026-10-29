@@ -144,6 +144,8 @@ fi
 setup_logging || exit 1
 setup_electron_env
 cleanup_stale_lock
+migrate_legacy_data_dir || exit 1
+repair_html_default
 
 log_message '--- Wispr Flow Launcher Start (rpm) ---'
 log_message "Timestamp: \$(date)"
@@ -182,6 +184,7 @@ Type=Application
 Categories=Utility;AudioVideo;Audio;
 StartupWMClass=$WM_CLASS
 Keywords=voice;dictation;speech;transcription;
+MimeType=x-scheme-handler/wispr-flow;
 EOF
 
 ICON_PNG="$DIST/resources/assets/logos/wispr-logo.png"     # 256x256 RGBA
@@ -225,6 +228,8 @@ BuildArch:      $ARCH
 # deps (they would reference unbundled .so names and may not resolve cleanly).
 AutoReqProv:    no
 Requires:       wl-clipboard
+Requires:       pulseaudio-utils
+Requires:       playerctl
 Recommends:     xclip
 Recommends:     xsel
 

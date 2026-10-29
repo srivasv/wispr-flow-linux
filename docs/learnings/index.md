@@ -10,6 +10,7 @@ one of these subsystems, read its page first. I wish I had.
 
 | Deep-dive | What it covers |
 |---|---|
+| [October 2026 upstream reconciliation](upstream-reconciliation-2026-10.md) | Audited baselines, all nine pending PR decisions, retained fork safeguards, upstream contributions and release validation. |
 | [KWin / zbus / tokio](kwin-zbus-tokio.md) | The async-zbus-on-tokio dispatch deadlock that left KDE active-app empty, and the fix. |
 | [GNOME Shell extension](gnome-shell-extension.md) | Install, the relogin requirement, the MRU focus fallback, and the Introspect pivot. |
 | [Electron 42 / V8 14.8 / sqlite](electron42-v8-sqlite.md) | The V8 14.8 ABI patch that lets `better-sqlite3-multiple-ciphers` compile. |
@@ -18,7 +19,8 @@ one of these subsystems, read its page first. I wish I had.
 | [Global key monitor](global-key-monitor.md) | Push-to-talk lives in the helper: XInput2 (X11) / evdev (Wayland) → `KeypressEvent`, and why both PTT and the shortcut recorder were dead without it. |
 | [Helper spawn env](helper-spawn-env.md) | The app spawns the helper with a replacement env (no `process.env`), starving it of `WAYLAND_DISPLAY`/`DISPLAY` → silent no-op `stub` injector; recording works, injection doesn't. |
 | [Platform gates](platform-gates.md) | The darwin/win32 carve-outs Linux falls through: the `.linux`-matches-no-CSS bug behind the shifted side menu, the three gate-shape rules, and how to re-audit a new Wispr version. |
-| [Patching minified JS](patching-minified-js.md) | Rules for patches that survive re-minification: `[\w$]+` for identifiers, anchor on developer strings, assert the match count, marker-based idempotency, verify against shipped bytes. |
+| [Patching minified JS](patching-minified-js.md) | Rules for patches that survive re-minification: `[\w$]+` for identifiers, quote classes, anchor on developer strings, fence preludes with `[^{}]`, assert the match count, marker-based idempotency, grep every consumer before flipping a shared gate, verify against shipped bytes. |
+| [Test methodology](test-methodology.md) | How a green shell test earns its colour: the `run`-subshell counter trap, near-miss fixtures, real-tool FAIL branches, host-state isolation, the launch smoke test and what it cannot see, and the mutation check. |
 | [APT/DNF + redirect Worker](apt-worker-architecture.md) | How packages reach users: metadata on `gh-pages`, binaries served by a Cloudflare Worker 302-redirecting to Release assets, and the heartbeat that watches the chain. |
 
 Want the "why this and not that" behind these — what I picked, and what I

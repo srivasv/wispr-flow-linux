@@ -11,13 +11,33 @@
 #     * mac-gates.sh           -> gates the macOS Applications-folder guard
 #     * linux-window-frame.sh  -> frameless hub/settings window on Linux
 #     * linux-hub-focusable.sh -> hub window focusable/WM-managed on Linux
-#     * linux-status-input-shape.sh -> bounded Status input region on X11
 #     * linux-deeplink.sh      -> cold-start wispr-flow: argv parse on Linux
+#     * linux-protocol-registration.sh -> no per-start xdg-settings protocol
+#       registration on Linux (it took over text/html on xdg-utils 1.1.3)
+#     * linux-disable-pill-drag.sh -> disable the status-pill drag gesture on linux
+#     * linux-main-shortcut-defaults.sh -> Linux profiles seed the Windows
+#       default shortcut/push-to-talk map instead of the macOS one (whose
+#       PTT key has no Linux keycode)
+#     * linux-xdg-data-dir.sh -> app data and logs dirs under
+#       XDG_CONFIG_HOME on Linux instead of ~/Library
+#     * linux-autostart.sh -> login items backed by an XDG autostart entry
+#       with --hidden, so "Open at login" works and starts hidden
+#     * linux-status-compact.sh -> shrink the status-pill window to the
+#       pill's footprint on Linux
+#     * linux-status-x11-shape.sh -> status window clipped to the pill and
+#       made clickable on X11 and XWayland
+#     * linux-status-picker-anchor.sh -> status pill pickers anchored at
+#       the pill on native Wayland (status window bounds added in main)
+#     * linux-status-idle-unmap.sh -> native idle Status hide/show
+#     * linux-status-window-visibility.sh -> re-asserts the Status window's
+#       always-on-top on its own monitorMove interval if the compositor
+#       drops it, including while idle between dictations
 #   renderer bundles:
 #     * linux-renderer-chrome.sh -> remaps the <html> platform class linux->win32
 #     * linux-renderer-treat-as-windows.sh -> widens each renderer's isWindows
 #       bind so its consumers take the Windows branch on Linux (the bridge's
 #       platform.isWindows stays honest/false; no preload is touched)
+#     * linux-status-surface-report.sh -> semantic surfaces + initial report
 #
 # The .asar container stores the JS bundle as concatenated plaintext, so a
 # byte-level grep over the packed file finds these markers without unpacking.
@@ -41,6 +61,8 @@ fi
 # Each entry: "human label|grep mode|pattern"
 #   mode F = fixed string (grep -aF), P = Perl regex (grep -aP)
 MARKERS=(
+  "dictation-audio: Linux mute and pause controls|F|/*WISPR_LINUX_DICTATION_AUDIO*/"
+  "dictation-audio: Linux audio worker|F|WISPR_LINUX_DICTATION_AUDIO_RUNTIME"
   "helper-resolver: Linux branch marker|F|WISPR_LINUX_HELPER_BRANCH"
   "helper-resolver: Linux helper log line|F|Running packaged Linux Helper service"
   "helper-resolver: Linux helper staged path|F|wispr-flow-linux-helper"
@@ -49,9 +71,20 @@ MARKERS=(
   "renderer-chrome: linux->win32 platform-class remap|F|WISPR_LINUX_WIN32_CHROME"
   "window-frame: linux frameless window branch|F|WISPR_LINUX_FRAMELESS"
   "hub-focusable: linux hub window focusable/WM-managed|F|WISPR_LINUX_HUB_FOCUSABLE"
-  "status-shape: bounded X11 Status input region|F|WISPR_LINUX_X11_STATUS_SHAPE"
   "treat-as-windows: linux widens renderer isWindows bind|F|WISPR_LINUX_RENDERER_ISWIN"
   "deeplink: linux cold-start argv parse|F|WISPR_LINUX_DEEPLINK"
+  "protocol-registration: linux skips the xdg-settings registration|F|WISPR_LINUX_PROTOCOL_REGISTRATION"
+  "early-singleton: second instance exits before init|F|WISPR_LINUX_EARLY_SINGLETON_V1"
+  "disable-pill-drag: linux drag-overlay activation forced false|F|WISPR_LINUX_DISABLE_PILL_DRAG"
+  "shortcut-defaults: linux seeds the Windows PTT map|F|WISPR_LINUX_MAIN_SHORTCUT_DEFAULTS"
+  "xdg-data-dir: linux app data and logs under XDG_CONFIG_HOME|F|WISPR_LINUX_XDG_DATA_DIR"
+  "autostart: linux login items backed by an XDG autostart entry|F|WISPR_LINUX_AUTOSTART"
+  "status-compact: linux status window shrunk to pill size|F|WISPR_LINUX_STATUS_COMPACT"
+  "status-x11-shape: linux X11 status window shaped to the pill|F|WISPR_LINUX_X11_STATUS_SHAPE"
+  "status-picker-anchor: pickers offset by the status window on Wayland|F|WISPR_LINUX_PICKER_ANCHOR"
+  "status-idle-unmap: linux native Status visibility|F|WISPR_LINUX_STATUS_IDLE_UNMAP"
+  "status-surface-report: linux semantic Status surfaces|F|WISPR_LINUX_STATUS_SURFACE_REPORT"
+  "status-window-visibility: linux always-on-top watchdog|F|WISPR_LINUX_STATUS_VIS_WATCHDOG"
 )
 
 missing=0

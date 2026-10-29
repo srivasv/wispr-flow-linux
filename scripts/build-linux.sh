@@ -51,10 +51,14 @@ WORK_DIR="$PROJECT_ROOT/build-linux"
 STAGE="$WORK_DIR/stage"                          # becomes the app's resources/ tree
 # These honor env overrides (set by the build.sh orchestrator) but default to
 # the validated values when run standalone -- behavior is identical unless an
-# override is exported. Keep APP_VERSION in lockstep with build.sh's APP_VERSION
-# so a standalone `build-linux.sh` run stages the same version the orchestrator
+# override is exported. APP_VERSION defaults to the installer pin so a
+# standalone `build-linux.sh` run stages the same version the orchestrator
 # does (a divergent default silently mislabels the staged tree).
-APP_VERSION="${APP_VERSION:-1.5.695}"
+if [[ -z "${APP_VERSION:-}" ]]; then
+  # shellcheck source=setup/installer-pin.sh
+  source "$SCRIPT_DIR/setup/installer-pin.sh"
+  APP_VERSION="$WISPR_VERSION"
+fi
 ELECTRON_MAJOR="${ELECTRON_MAJOR:-42}"
 ELECTRON_VERSION="${ELECTRON_VERSION:-42.3.0}"
 ARCH="${ARCH:-x64}"   # linux-x64; the helper + sqlite must match
@@ -64,6 +68,8 @@ say()   { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
 auto()  { printf '  \033[1;32m[AUTO]\033[0m   %s\n' "$*"; }
 manual(){ printf '  \033[1;33m[MANUAL]\033[0m %s\n' "$*"; }
 warn()  { printf '  \033[1;31m[WARN]\033[0m   %s\n' "$*"; }
+# Same shape as scripts/_common.sh's die: stderr, then exit 1.
+die()   { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # Resolve the clean-room Linux helper into $HELPER_BIN, in priority order:
 #   1. an executable HELPER_BIN override (CI's prefetched asset or a local
@@ -197,7 +203,17 @@ DOC
 #===============================================================================
 step2_stage_resources() {
   say "Step 2: stage resources and unpack app.asar"
-  rm -rf "$WORK_DIR"
+  # Clear the previous run's outputs but keep downloads/: it caches the
+  # verified installer, the Electron zip and the unpacked electron-dist, and
+  # a full wipe re-fetched all three on every local build (~450 MB). Nothing
+  # from a previous build leaks through the survivor: the packaging makers
+  # clear their own work dirs, build.sh's sync_stage_to_dist mirrors the
+  # staged tree into electron-dist exactly, and fetch_electron re-stages a
+  # dist whose version stamp is not the wanted Electron.
+  if [[ -d "$WORK_DIR" ]]; then
+    find "$WORK_DIR" -mindepth 1 -maxdepth 1 ! -name 'downloads' \
+      -exec rm -rf {} +
+  fi
   mkdir -p "$STAGE"
 
   # Copy the non-asar resources (Release/, assets, migrations, etc.) but NOT the
@@ -234,6 +250,11 @@ step2_stage_resources() {
 
 #===============================================================================
 # Step 3: patch the main bundle -- add the 'linux' helper-path branch  [AUTO]
+#
+# Every patch here is load-bearing and scripts/verify-patches.sh requires its
+# marker, so a patch that fails to apply fails the build right here, naming
+# the patch, instead of surfacing minutes later as a MISSING marker with the
+# real diagnosis buried above a [WARN] (issue #104).
 #===============================================================================
 step3_patch_bundle() {
   say "Step 3: patch main bundle, renderer chrome, and renderer platform flags"
@@ -249,29 +270,42 @@ step3_patch_bundle() {
   fi
 
   if [[ -n "$target_bundle" ]]; then
+    # Before any patch touches the tree: every upstream literal the patches
+    # depend on, counted in the pristine bundle (scripts/patches/
+    # tripwires.tsv). A CHANGED line here is "upstream changed the
+    # behaviour"; an anchor miss below with this green is "the shape moved".
+    # A tree the first patch already marked is not pristine (a re-run, a
+    # partial build): the counts were checked on the pass that marked it.
+    if grep -qF 'WISPR_LINUX_HELPER_BRANCH' "$target_bundle"; then
+      auto "Upstream tripwires: tree already patched, checked on the first pass."
+    else
+      auto "Checking upstream tripwires under ${target_bundle%/main/index.js}"
+      bash "$SCRIPT_DIR/check-upstream-tripwires.sh" "${target_bundle%/main/index.js}" \
+        || die "Upstream tripwires changed -- see check-upstream-tripwires.sh output above."
+    fi
     auto "Running patch-helper-resolver.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/helper-resolver.sh" "$target_bundle" \
-      || warn "Patch failed -- see patch-helper-resolver.sh output above."
+      || die "Patch failed -- see patch-helper-resolver.sh output above."
     # Gate the macOS-only "must be in /Applications" guard to darwin. On Linux it
     # otherwise shows a blocking "Move Flow to Applications folder" dialog and
     # calls app.quit() on launch. (Validated: 2026-06-04 launch.)
     auto "Running patch-mac-gates.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/mac-gates.sh" "$target_bundle" \
-      || warn "Mac-gate patch failed -- see patch-mac-gates.sh output above."
+      || die "Mac-gate patch failed -- see patch-mac-gates.sh output above."
     # Spread the session env (WAYLAND_DISPLAY/DISPLAY/XDG_RUNTIME_DIR/DBUS_...)
     # into the helper-spawn env object. Without it the Linux helper sees no
     # session and falls to the no-op `stub` injection backend, so text is never
     # injected. (Validated: 2026-06-04 PasteText stub.) See helper-env.sh.
     auto "Running patch-helper-env.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/helper-env.sh" "$target_bundle" \
-      || warn "Helper-env patch failed -- see patch-helper-env.sh output above."
+      || die "Helper-env patch failed -- see patch-helper-env.sh output above."
     # Make the hub/settings BrowserWindow frameless on Linux like win32 (it
     # otherwise falls to the Electron default: native frame + visible menu bar).
     # Pairs with linux-renderer-chrome.sh below so the .win32 custom title-bar
     # controls render correctly. See docs/learnings/platform-gates.md.
     auto "Running linux-window-frame.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/linux-window-frame.sh" "$target_bundle" \
-      || warn "Window-frame patch failed -- see linux-window-frame.sh output above."
+      || die "Window-frame patch failed -- see linux-window-frame.sh output above."
     # Make the Hub window focusable on Linux: upstream creates it focusable:!1
     # on every platform and only restores focus behind isMac gates. On X11 a
     # focusable:false BrowserWindow is created override-redirect (unmanaged):
@@ -279,21 +313,103 @@ step3_patch_bundle() {
     # linux-hub-focusable.sh.
     auto "Running linux-hub-focusable.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/linux-hub-focusable.sh" "$target_bundle" \
-      || warn "Hub-focusable patch failed -- see linux-hub-focusable.sh output above."
-    # Reuse Wispr's renderer-reported Status rectangles as a native X11 shape.
-    # Whole-window alpha polling can otherwise leave the transparent status
-    # surface blocking every app beneath its 480x570 bounds.
-    auto "Running linux-status-input-shape.sh on $target_bundle"
-    bash "$SCRIPT_DIR/patches/linux-status-input-shape.sh" "$target_bundle" \
-      || warn "Status-input-shape patch failed -- see output above."
+      || die "Hub-focusable patch failed -- see linux-hub-focusable.sh output above."
     # Parse the wispr-flow: deep-link URL out of argv at cold start on Linux too
     # (the parse was win32-only; the warm-start second-instance path already works).
     auto "Running linux-deeplink.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/linux-deeplink.sh" "$target_bundle" \
-      || warn "Deep-link patch failed -- see linux-deeplink.sh output above."
+      || die "Deep-link patch failed -- see linux-deeplink.sh output above."
+    # Skip the per-start setAsDefaultProtocolClient on Linux: Electron runs
+    # xdg-settings for it, and xdg-utils 1.1.3 on GNOME also makes the app the
+    # default text/html handler each time (issue #75). The desktop entry's
+    # MimeType= registers the scheme instead.
+    auto "Running linux-protocol-registration.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-protocol-registration.sh" "$target_bundle" \
+      || die "Protocol-registration patch failed -- see linux-protocol-registration.sh output above."
+    # Take the Electron single-instance lock at the very top of the bundle,
+    # before ANY init runs. The vendor only requests the lock at the end of
+    # its ~8.3 MB bundle, so a second launch fully initializes (native .node
+    # modules, better-sqlite3, helper IPC) and then quits -- teardown of that
+    # half-initialized native state aborts with V8 FATAL napi_throw (9
+    # SIGABRT coredumps observed 2026-08-18/26, incl. a 4-in-6s crash loop).
+    # With the early guard the second instance exits before executing another
+    # byte; the primary still gets `second-instance` (argv handshake happens
+    # during the failed lock request) and focuses its hub window. See
+    # patches/linux-early-singleton.sh.
+    auto "Running linux-early-singleton.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-early-singleton.sh" "$target_bundle" \
+      || die "Early-singleton patch failed -- see linux-early-singleton.sh output above."
+    # Disable the status-pill drag gesture on Linux: it can never complete
+    # under native Wayland and strands an input-blocking dimming overlay.
+    auto "Running linux-disable-pill-drag.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-disable-pill-drag.sh" "$target_bundle" \
+      || die "linux-disable-pill-drag.sh failed -- see its output above."
+    # Anchor the status pill's pickers (auto-polish, fetch link, extension
+    # menu, shortcut-join drawer) at the pill on native Wayland, where the
+    # renderer's window.screenX/Y are always 0. Main adds the status window's
+    # bounds to each forwarded point and removes them from the DidHide cursor
+    # point; X11 and XWayland are left alone. See
+    # patches/linux-status-picker-anchor.sh.
+    auto "Running linux-status-picker-anchor.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-picker-anchor.sh" "$target_bundle" \
+      || die "linux-status-picker-anchor.sh failed -- see its output above."
+    # Seed fresh Linux profiles with the WINDOWS default shortcut/PTT map. The
+    # main process picks the defaults with a `"win32"===process.platform` flag,
+    # so on Linux it wrote the macOS map -- whose PTT key resolves to keycode -1
+    # ("no such key on Linux"). Result: an unpressable, blank push-to-talk
+    # binding and no way past the onboarding shortcuts step (issues #33, #46).
+    # Only the two default-seeding ternaries are widened; the flag's other ~79
+    # consumers (Windows-only OS/registry/path APIs) keep the real platform.
+    auto "Running linux-main-shortcut-defaults.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-main-shortcut-defaults.sh" "$target_bundle" \
+      || die "Shortcut-defaults patch failed -- see linux-main-shortcut-defaults.sh output above."
+    # Keep the app data and logs dirs under XDG_CONFIG_HOME on Linux. The
+    # platform module builds both with a win32-vs-mac ternary, so Linux kept
+    # its database under ~/Library/Application Support (issue #100). The
+    # launcher moves an existing legacy dir over before Electron starts.
+    auto "Running linux-xdg-data-dir.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-xdg-data-dir.sh" "$target_bundle" \
+      || die "XDG data-dir patch failed -- see linux-xdg-data-dir.sh output above."
+    # Back Electron's login-item API with an XDG autostart entry on Linux,
+    # so "Open at login" writes one (Exec=... --hidden) and the Hub stays
+    # hidden when the app was started by it (issue #81).
+    auto "Running linux-autostart.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-autostart.sh" "$target_bundle" \
+      || die "Autostart patch failed -- see linux-autostart.sh output above."
+    auto "Running linux-dictation-audio.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-dictation-audio.sh" "$target_bundle" \
+      || die "Dictation audio patch failed."
+    # Shrink the status-pill window to the pill's footprint on Linux. The
+    # invisible transparent canvas swallows clicks on Wayland.
+    auto "Running linux-status-compact.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-compact.sh" "$target_bundle" \
+      || die "linux-status-compact.sh failed -- see its output above."
+    # Clip the status window to the pill's reported rectangles on X11 and
+    # XWayland and let that shape decide input, instead of the alpha
+    # hit-test poll that leaves the pill click-through (issue #41).
+    auto "Running linux-status-x11-shape.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-x11-shape.sh" "$target_bundle" \
+      || die "linux-status-x11-shape.sh failed -- see its output above."
+    # Unmap idle Status surfaces; recording/notification reports restore them.
+    auto "Running linux-status-idle-unmap.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-idle-unmap.sh" "$target_bundle" \
+      || die "Status idle-unmap patch failed -- see output above."
+    # Re-assert always-on-top on the Status window's own 400 ms monitorMove
+    # interval if the compositor ever drops it (observed at dictation
+    # start/stop, sleep/resume, monitor/dock topology changes), including
+    # between dictations while idle -- upstream's own dictation-start
+    # re-assert does not cover that stretch (refs #71; does not close it --
+    # this cannot fix the separate click-through/dead-zone question).
+    auto "Running linux-status-window-visibility.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-status-window-visibility.sh" "$target_bundle" \
+      || die "linux-status-window-visibility.sh failed -- see its output above."
 
     # Renderer + preload patches live alongside the main bundle under .webpack/.
     local webpack_root="${target_bundle%/main/index.js}"
+    local status_renderer="$webpack_root/renderer/status/index.js"
+    auto "Running linux-status-surface-report.sh on $status_renderer"
+    bash "$SCRIPT_DIR/patches/linux-status-surface-report.sh" "$status_renderer" \
+      || die "Status surface-report patch failed -- see output above."
     # Remap the <html> platform class linux->win32 so Linux adopts the tested
     # .win32 stylesheet (fixes the ~68px phantom window-control inset that shoved
     # the sidebar collapse toggle right and left the controls invisible).
@@ -301,9 +417,9 @@ step3_patch_bundle() {
     if [[ -f "$hub_renderer" ]]; then
       auto "Running linux-renderer-chrome.sh on $hub_renderer"
       bash "$SCRIPT_DIR/patches/linux-renderer-chrome.sh" "$hub_renderer" \
-        || warn "Renderer-chrome patch failed -- see linux-renderer-chrome.sh output above."
+        || die "Renderer-chrome patch failed -- see linux-renderer-chrome.sh output above."
     else
-      warn "Hub renderer bundle not found at $hub_renderer -- skipping chrome patch."
+      die "Hub renderer bundle not found at $hub_renderer (its marker is required)."
     fi
     # Treat Linux like Windows for renderer platform UI WITHOUT lying to the
     # bridge: leave window.electron.platform.isWindows reporting its real value
@@ -319,14 +435,31 @@ step3_patch_bundle() {
       grep -qF 'platform?.isWindows' "$renderer" || continue
       auto "Running linux-renderer-treat-as-windows.sh on $renderer"
       bash "$SCRIPT_DIR/patches/linux-renderer-treat-as-windows.sh" "$renderer" \
-        || warn "Treat-as-windows patch failed on $renderer -- see output above."
+        || die "Treat-as-windows patch failed on $renderer -- see output above."
       renderer_count=$((renderer_count + 1))
     done
     if [[ "$renderer_count" -eq 0 ]]; then
-      warn "No renderer reads platform.isWindows under $webpack_root/renderer -- skipping treat-as-windows patch."
+      die "No renderer reads platform.isWindows under $webpack_root/renderer (its marker is required)."
     fi
   else
-    warn "No main bundle available to patch."
+    die "No main bundle available to patch."
+  fi
+}
+
+# Drop the patch scripts' in-tree backups from an asar contents tree before
+# it is packed. Every patch keeps a <bundle>.orig (mac-gates: .macgate.orig)
+# beside the file it rewrites, which is right for an in-place patch of
+# extract/app and wrong for the asar: on 1.6.897 nine pristine copies of the
+# main and renderer bundles (102 MB) rode into a 192 MB asar and into every
+# package. Step 7 calls this before packing and tests/test-patch-stage.sh
+# before its own repack; the artifact tests assert the packed header lists
+# no such entry (assert_asar_no_patch_backups).
+drop_patch_backups() {
+  local contents="$1" backups
+  backups=$(find "$contents" -type f -name '*.orig' 2>/dev/null | wc -l)
+  if (( backups > 0 )); then
+    find "$contents" -type f -name '*.orig' -delete
+    auto "Dropped $backups patch backup file(s) (*.orig) before repack"
   fi
 }
 
@@ -599,6 +732,8 @@ step7_helper_and_repack() {
   #     NOTHING in @electron/asar and silently leaves the .node packed in-archive.
   local contents="$WORK_DIR/app.asar.contents"
   if [[ -d "$contents" ]] && command -v npx >/dev/null; then
+    # 7b-pre. Drop the patch scripts' in-tree backups; see drop_patch_backups.
+    drop_patch_backups "$contents"
     auto "Repacking app.asar (with --unpack '*.node')..."
     if npx --yes @electron/asar pack "$contents" "$STAGE/app.asar" \
       --unpack '*.node'; then
@@ -677,4 +812,9 @@ main() {
   echo "                final .deb/.rpm/.AppImage packaging (all network/toolchain)."
 }
 
-main "$@"
+# Run the pipeline only when executed. Sourced (tests/test-patch-stage.sh),
+# the file defines its steps and globals and returns, so a test can point
+# WORK_DIR/STAGE/RESOURCES_SRC at a temp tree and call the steps it needs.
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+  main "$@"
+fi
