@@ -9,6 +9,34 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 ## [Unreleased]
 
 ## [v1.0.9] - 2026-10-26
+### Fixed
+
+- The Flow Bar takes the mouse again on X11 and XWayland (#41). Hover,
+  right-click and the cancel and finish buttons were dead because the status
+  window's input hung on Wispr's alpha hit-test poll, which misses on Linux.
+  `linux-status-x11-shape.sh` runs Wispr's own Windows shape manager there
+  instead: the window is clipped to the rectangles the pill reports, and
+  that shape decides where clicks land, so the transparent rest still passes
+  them through. Because the shape now does that job, X11 drops the 200x110
+  compact box again and toasts such as "Undo" after a cancel show in full.
+  Native Wayland is unchanged (#44). Builds on @srivasv's shape-manager port
+  in their fork.
+
+## [v1.0.5] - 2026-10-28
+
+### Added
+
+- "Open at login" works on Linux (#81). `linux-autostart.sh` backs
+  Electron's login-item API with an XDG autostart entry,
+  `~/.config/autostart/wispr-flow.desktop`, whose `Exec=` carries
+  `--hidden`, as Anthropic's official Claude Desktop for Linux does. A login
+  start now keeps the Hub hidden through upstream's own "opened at login"
+  branch, and a manual launch still shows it. The entry is written when you
+  turn the setting on, so an existing profile whose toggle already shows on
+  has no entry until you turn it off and on again. `TryExec=` makes desktops
+  skip the entry once the app is uninstalled, and a moved AppImage repairs
+  it on its next start. `--doctor` reports the entry. Builds on
+  @crafteraadarsh's shim in #69 and @vascode2's diagnosis in #81.
 
 ### Fixed
 
