@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.10] - 2026-10-29
+
 ### Added
 
 - Upstream XDG autostart and data-directory support, helper v0.1.3, native
