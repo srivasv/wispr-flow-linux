@@ -83,7 +83,7 @@ with io.open(path, "r", encoding="utf-8", errors="surrogateescape") as f:
 # Anchor: <e>.app.setAsDefaultProtocolClient("wispr-flow"). The receiver is a
 # minified identifier that churns, so it rides along inside the match.
 site = re.compile(
-    r'[\w$]+\.app\.setAsDefaultProtocolClient\("wispr-flow"\)'
+    r"[\w$]+\.app\.setAsDefaultProtocolClient\((?P<quote>[\"'`])wispr-flow(?P=quote)\)"
 )
 matches = list(site.finditer(data))
 if len(matches) != 1:
@@ -128,7 +128,7 @@ patch_verify_marker
 # The gate must sit directly in front of the original call (proves the marker
 # landed on the registration, not somewhere else).
 patch_expect_shape -qP \
-	'\("linux"===process\.platform/\*'"$MARKER"'\*/\|\|[\w$]+\.app\.setAsDefaultProtocolClient\("wispr-flow"\)\)' \
+	'\("linux"===process\.platform/\*'"$MARKER"'\*/\|\|[\w$]+\.app\.setAsDefaultProtocolClient\(["\x27`]wispr-flow["\x27`]\)\)' \
 	-- 'gate not adjacent to the protocol registration.'
 
 # Syntax-check the patched bundle.

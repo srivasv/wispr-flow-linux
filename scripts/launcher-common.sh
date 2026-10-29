@@ -262,12 +262,9 @@ cleanup_stale_lock() {
 # its history sat in ~/Library. Runs after cleanup_stale_lock, before
 # Electron starts, so the app never has the database open mid-move.
 #
-# All or nothing: skipped while any instance holds the SingletonLock (an
-# older build still running from the legacy path), and skipped when any
-# entry would overwrite one already in the XDG dir. A skip is logged and
-# the legacy dir stays for --doctor to report. Empty legacy parents
-# (~/Library/Application Support, ~/Library) are removed with rmdir, which
-# refuses anything that still has content.
+# Refuse to launch on conflicts or an active instance; otherwise the app
+# could open an empty or partially migrated database. Completed moves remain
+# recoverable in the target if a later move fails.
 migrate_legacy_data_dir() {
 	local legacy target lock entry name
 	legacy="$(wispr_legacy_data_dir)"
@@ -278,7 +275,7 @@ migrate_legacy_data_dir() {
 
 	if [[ -e $lock || -L $lock ]]; then
 		log_message "Legacy data dir not moved: an instance holds $lock"
-		return 0
+		return 1
 	fi
 
 	local entries=()
@@ -290,7 +287,7 @@ migrate_legacy_data_dir() {
 		name="${entry##*/}"
 		if [[ -e $target/$name || -L $target/$name ]]; then
 			log_message "Legacy data dir not moved: $target/$name exists"
-			return 0
+			return 1
 		fi
 	done
 
@@ -299,7 +296,8 @@ migrate_legacy_data_dir() {
 		return 1
 	}
 	for entry in "${entries[@]}"; do
-		if ! mv -- "$entry" "$target/"; then
+		if ! mv -n -- "$entry" "$target/" \
+			|| [[ -e $entry || -L $entry ]]; then
 			log_message "Legacy data dir move failed at $entry"
 			return 1
 		fi
@@ -321,10 +319,9 @@ migrate_legacy_data_dir() {
 #
 # The desktop entry has never declared text/html, so that line can only
 # come from the bug. Nothing else in the file is touched. The file is
-# rewritten in place, not replaced, so a symlinked mimeapps.list (a
-# dotfiles checkout) stays a symlink.
+# replaced atomically at its resolved target, preserving symlinks.
 repair_html_default() {
-	local list stripped
+	local list stripped tmp
 	list="$(wispr_mimeapps_list)"
 	[[ -f $list ]] || return 0
 
@@ -335,7 +332,12 @@ repair_html_default() {
 		log_message "text/html default not repaired: $list is not writable"
 		return 0
 	fi
-	if ! printf '%s\n' "$stripped" > "$list"; then
+	list=$(readlink -f -- "$list") || return 1
+	tmp=$(mktemp "${list}.XXXXXX") || return 1
+	if ! cp -p -- "$list" "$tmp" \
+		|| ! printf '%s\n' "$stripped" > "$tmp" \
+		|| ! mv -f -- "$tmp" "$list"; then
+		rm -f -- "$tmp"
 		log_message "text/html default not repaired: cannot write $list"
 		return 1
 	fi

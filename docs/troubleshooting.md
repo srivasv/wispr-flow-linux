@@ -169,17 +169,17 @@ Run `--doctor` and work the failures top-down:
    sel=clipboard
    type=
    while [[ $# -gt 0 ]]; do
-   	case "$1" in
-   		-p | --primary) sel=primary ;;
-   		-t | --type) shift; type="$1" ;;
-   		--type=*) type="${1#--type=}" ;;
-   		-*) ;;
-   		*) break ;;
-   	esac
-   	shift
+       case "$1" in
+           -p | --primary) sel=primary ;;
+           -t | --type) shift; type="$1" ;;
+           --type=*) type="${1#--type=}" ;;
+           -*) ;;
+           *) break ;;
+       esac
+       shift
    done
    [[ -z $type || $type == text/plain* ]] &&
-   	exec xclip -selection "$sel" -i
+       exec xclip -selection "$sel" -i
    exec xclip -selection "$sel" -t "$type" -i
    ```
 

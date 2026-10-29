@@ -133,7 +133,7 @@ fi
 setup_logging || exit 1
 setup_electron_env
 cleanup_stale_lock
-migrate_legacy_data_dir
+migrate_legacy_data_dir || exit 1
 repair_html_default
 
 log_message '--- Wispr Flow Launcher Start (appimage) ---'
@@ -269,7 +269,8 @@ if [[ "${GITHUB_ACTIONS:-}" == 'true' ]]; then
     warn 'zsyncmake not found; the .zsync delta will not be generated.'
     warn '  Install the "zsync" package in the build environment to enable it.'
   fi
-  update_info="gh-releases-zsync|wispr-flow-linux|wispr-flow-linux|latest|${NAME}-*-${ARCH}.AppImage.zsync"
+  update_repo="${GITHUB_REPOSITORY:-wispr-flow-linux/wispr-flow-linux}"
+	update_info="gh-releases-zsync|${update_repo/\//|}|latest|${NAME}-*-${ARCH}.AppImage.zsync"
   say "Embedding AppImage update info: $update_info"
   if ! "$appimagetool" --updateinformation "$update_info" "$APPDIR" "$OUT"; then
     die "appimagetool failed to build the AppImage"

@@ -1787,3 +1787,32 @@ JS
 	[[ "$status" -ne 0 ]]
 	! grep -q 'WISPR_LINUX_STATUS_VIS_WATCHDOG' "$FIX"
 }
+
+status_shape_1297() {
+	status_shape_1209 | sed 's/if(M.H8){if(!j.applyReport(e,t))return;(0,g.cr)(n,t.shapeRects)}(0,g.cM)(n,t.rects)/if(M.H8\&\&j.applyReport(e,t))(0,g.cr)(n,t.shapeRects),(0,g.cM)(n,t.rects);else if(M.H8)return;else (0,g.cM)(n,t.rects)/'
+}
+
+@test "status-x11-shape: 1297 widens validation and rejected-report fallback" {
+	status_shape_1297 > "$FIX"
+	run bash "$PATCH_DIR/linux-status-x11-shape.sh" "$FIX"
+	[[ $status -eq 0 ]]
+	grep -qF 'if((M.H8||globalThis.__wisprLinuxX11StatusShape)&&j.applyReport(e,t))' "$FIX"
+	grep -qF 'else if(M.H8||globalThis.__wisprLinuxX11StatusShape/*WISPR_X11_REPORT_FALLBACK*/)' "$FIX"
+	assert_idempotent "$PATCH_DIR/linux-status-x11-shape.sh" "$FIX"
+}
+
+@test "status-x11-shape: rejects a changed 1297 fallback before writing" {
+	status_shape_1297 | sed 's/else if(M.H8)return/else if(M.other)return/' > "$FIX"
+	cp "$FIX" "$TEST_TMP/before"
+	run bash "$PATCH_DIR/linux-status-x11-shape.sh" "$FIX"
+	[[ $status -eq 1 ]]
+	cmp -s "$FIX" "$TEST_TMP/before"
+}
+
+@test "protocol-registration: accepts single and backtick scheme quotes" {
+	for quote in "'" '`'; do
+		printf 'let t=e.app.setAsDefaultProtocolClient(%swispr-flow%s);\n' "$quote" "$quote" > "$FIX"
+		run bash "$PATCH_DIR/linux-protocol-registration.sh" "$FIX"
+		[[ $status -eq 0 ]]
+	done
+}

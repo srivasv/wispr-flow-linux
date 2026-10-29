@@ -144,7 +144,7 @@ fi
 setup_logging || exit 1
 setup_electron_env
 cleanup_stale_lock
-migrate_legacy_data_dir
+migrate_legacy_data_dir || exit 1
 repair_html_default
 
 log_message '--- Wispr Flow Launcher Start (rpm) ---'

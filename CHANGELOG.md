@@ -8,47 +8,30 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
-## [v1.0.9] - 2026-10-26
-### Fixed
-
-- The Flow Bar takes the mouse again on X11 and XWayland (#41). Hover,
-  right-click and the cancel and finish buttons were dead because the status
-  window's input hung on Wispr's alpha hit-test poll, which misses on Linux.
-  `linux-status-x11-shape.sh` runs Wispr's own Windows shape manager there
-  instead: the window is clipped to the rectangles the pill reports, and
-  that shape decides where clicks land, so the transparent rest still passes
-  them through. Because the shape now does that job, X11 drops the 200x110
-  compact box again and toasts such as "Undo" after a cancel show in full.
-  Native Wayland is unchanged (#44). Builds on @srivasv's shape-manager port
-  in their fork.
-### Fixed
-
-- The mute and pause settings now work during Linux dictation (#120).
-  Audio returns after stop, cancellation, microphone testing, or app exit.
-  Outputs and players already muted or paused keep their state.
-
-## [v1.0.5] - 2026-10-28
-
 ### Added
 
-- "Open at login" works on Linux (#81). `linux-autostart.sh` backs
-  Electron's login-item API with an XDG autostart entry,
-  `~/.config/autostart/wispr-flow.desktop`, whose `Exec=` carries
-  `--hidden`, as Anthropic's official Claude Desktop for Linux does. A login
-  start now keeps the Hub hidden through upstream's own "opened at login"
-  branch, and a manual launch still shows it. The entry is written when you
-  turn the setting on, so an existing profile whose toggle already shows on
-  has no entry until you turn it off and on again. `TryExec=` makes desktops
-  skip the entry once the app is uninstalled, and a moved AppImage repairs
-  it on its next start. `--doctor` reports the entry. Builds on
-  @crafteraadarsh's shim in #69 and @vascode2's diagnosis in #81.
-- The AppImage artifact test now drives push-to-talk end to end. It swaps
-  the helper for a scripted fake (`tests/fake-helper.py`), sends left Ctrl +
-  Win through it, and checks the app maps it to push-to-talk and starts
-  dictation, after checking right Ctrl + Win does not. No keyboard or
-  account is needed; an unsigned profile stops at the `SignedOut` notice,
-  so recording and paste are not covered. `tests/test-dictation-e2e.sh`
-  runs the same check on its own.
+- Upstream XDG autostart and data-directory support, helper v0.1.3, native
+  module pins, and installer checksum pinning.
+- Scripted push-to-talk coverage from upstream #142's test-only commit.
+
+### Fixed
+
+- Reconcile upstream #148's X11 shape lifecycle with Wispr 1.6.1297,
+  retaining the older handler and validated viewport fallback.
+- Import #132 idle visibility, #73 visibility watchdog, #145 dictation audio,
+  and #129 protocol registration fixes.
+- Abort launch on profile migration conflicts; preserve the original MIME
+  configuration if its atomic replacement fails.
+- Failed patches restore their immediate input, preserving earlier patches.
+- AppImage update metadata follows the repository that builds the release.
+
+### Changed
+
+- Reconcile upstream packaging and CI while retaining fork APT hosting,
+  required launch checks, and disabled DNF/AUR publishing.
+
+
+## [v1.0.9] - 2026-10-26
 
 ### Fixed
 
@@ -56,55 +39,6 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
   guard, added Hub web preferences, and comma-sequence deep-link guard.
   Adapted from upstream PR #136 (fixing upstream issue #135), with regression
   coverage for old and new bundle shapes.
-- The Linux Status pill re-asserts always-on-top on its own 400 ms
-  monitorMove tick, including between dictations while idle, so a
-  compositor that drops the level no longer leaves the pill behind other
-  windows (refs #71). It does not change click-through; that half of #71
-  stays open.
-- Wispr Flow 1.6.1264 builds again, so the nightly bump can move the pin
-  past 1.6.1209 (#135). Upstream reshaped three patch sites while keeping
-  their literals: the cold-start deep-link guard now ends a comma sequence,
-  the Applications-folder guard is an async arrow, and the Hub's
-  webPreferences gained `webviewTag` before `devTools`. `linux-deeplink.sh`,
-  `mac-gates.sh` and `linux-hub-focusable.sh` accept both shapes and leave
-  1.6.1209 byte-identical.
-- On native Wayland the pickers the status pill opens (auto-polish,
-  fetch link, extension bubble menu, shortcut-join drawer) now open next to
-  the pill instead of the screen's top-left corner, and the pill's hover
-  check after a menu closes lines up again. Wayland reports
-  `window.screenX/Y` as 0, so `linux-status-picker-anchor.sh` has main add
-  the status window's bounds to each forwarded point and take them off the
-  cursor point it sends back. X11 and XWayland are unchanged.
-- Linux Status windows unmap when the renderer reports no visible surfaces,
-  instead of leaving an invisible native window over other apps (refs #71,
-  #76). Recording/processing indicators and notifications restore the window
-  without focus or a polling timer. This addresses idle overlays, not every
-  compositor/input failure while the indicator is visible.
-- Wispr Flow no longer makes itself the default app for `.html` files at
-  every start (#75). The app registers its `wispr-flow:` link scheme on each
-  launch, which on Linux runs `xdg-settings`, and the GNOME backend of
-  xdg-utils 1.1.3 (Ubuntu 22.04) also sets the `text/html` default as a side
-  effect. `linux-protocol-registration.sh` skips that call on Linux, and the
-  deb, rpm, AppImage and Nix desktop entries declare
-  `MimeType=x-scheme-handler/wispr-flow;` instead. The launcher removes a
-  `text/html=wispr-flow.desktop` line an older build left in
-  `~/.config/mimeapps.list` on the first start after the update, so `.html`
-  files fall back to the desktop's default browser, and `--doctor` warns
-  while the line remains.
-- The database, meetings, backups and extension state now live in
-  `~/.config/Wispr Flow` (or `$XDG_CONFIG_HOME/Wispr Flow`) instead of
-  `~/Library/Application Support/Wispr Flow`, and the app no longer creates
-  `~/Library` on Linux (#100). `linux-xdg-data-dir.sh` gives the app's data
-  and logs dirs a Linux arm. The launcher moves an existing legacy dir over
-  on the first start after the update, and skips the move while an instance
-  holds the lock or when any file would be overwritten. `--doctor` warns
-  while a legacy dir remains.
-- The nightly bump no longer stalls when upstream's `latest.json` is
-  unreachable or unparsable (#83). `resolve-installer-url.sh` falls back to
-  the Squirrel `RELEASES` file beside the installer, downloads the Setup
-  `.exe` it names to compute the SHA-256 the pin requires, and checks the
-  SHA-1 of the `*-full.nupkg` inside against the `RELEASES` line. A
-  manifest that parses but is refused stays fatal.
 
 ## [v1.0.8] - 2026-10-20
 

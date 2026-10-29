@@ -125,8 +125,22 @@ edits = []  # (match, replacement)
 edits.append((create, f'({create["F"]}||{GATE})?' + create.group(0).split('?', 1)[1]))
 edits.append((visible, f'({create["F"]}||{GATE})' + visible.group(0)[len(create['F']):]))
 
-m = one(r'if\(' + F + r'\)\{if\(!' + J + r'\.applyReport\(', 'rect-report')
-edits.append((m, f'if({create["F"]}||{GATE}){{' + m.group(0)[len(f'if({create["F"]}){{'):]))
+# 1297 combines validation with the Windows predicate and has a fallback.
+old = r'if\(' + F + r'\)\{if\(!' + J + r'\.applyReport\('
+new = (r'if\(' + F + r'&&' + J + r'\.applyReport\('
+	r'(?P<sender>' + ID + r'),(?P<report>' + ID + r')\)\)'
+	r'\(0,' + ID + r'\.' + ID + r'\)\(' + ID + r',(?P=report)\.shapeRects\),'
+	r'\(0,' + ID + r'\.' + ID + r'\)\(' + ID + r',(?P=report)\.rects\);else if\('
+	+ F + r'\)')
+m = one('(?:' + old + ')|(?:' + new + ')', 'rect-report')
+s = m.group(0)
+if m['report'] is None:
+	s = s.replace(f'if({create["F"]})', f'if({create["F"]}||{GATE})', 1)
+else:
+	s = s.replace(f'if({create["F"]}&&', f'if(({create["F"]}||{GATE})&&', 1)
+	s = s.replace(f'else if({create["F"]})',
+		f'else if({create["F"]}||{GATE}/*WISPR_X11_REPORT_FALLBACK*/)')
+edits.append((m, s))
 
 m = one(F + r'\|\|' + NE + r'\(' + ID + r'\),(?P<f>' + F + r')&&!' + ID + r'&&'
 	+ J + r'\.setEnabled\(!0\)', 'show')
@@ -211,6 +225,7 @@ patch_expect_shape -qF \
 	-- 'X11 poll-starter branch not in expected form.'
 want=13
 grep -qF 'WISPR_LINUX_STATUS_COMPACT' "$BUNDLE" && want=14
+grep -qF 'WISPR_X11_REPORT_FALLBACK' "$BUNDLE" && want=$((want + 1))
 sites=$(grep -oF 'globalThis.__wisprLinuxX11StatusShape' "$BUNDLE" | wc -l)
 if [[ $sites -ne $want ]]; then
 	echo "ERROR: expected $want X11 status-shape gate reads, found $sites. Restoring backup." >&2

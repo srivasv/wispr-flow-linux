@@ -206,10 +206,15 @@ stdenvNoCC.mkDerivation {
     main_bundle=asar-contents/.webpack/main/index.js
     [[ -f "$main_bundle" ]] || { echo "main bundle not found at $main_bundle" >&2; exit 1; }
 
-    # Add the 'linux' helper-path branch + gate the macOS Applications guard.
-    bash ${sourceRoot}/scripts/patches/helper-resolver.sh "$main_bundle"
-    bash ${sourceRoot}/scripts/patches/mac-gates.sh "$main_bundle"
-    bash ${sourceRoot}/scripts/patches/linux-dictation-audio.sh "$main_bundle"
+    # Share every patch and its ordering with deb/rpm/AppImage. In particular,
+    # the launcher migration must agree with the XDG path inside the bundle.
+    (
+      source ${sourceRoot}/scripts/build-linux.sh
+      WORK_DIR="$PWD"
+      WEBPACK_MAIN="$PWD/$main_bundle"
+      step3_patch_bundle
+      drop_patch_backups "$PWD/asar-contents"
+    )
 
     # Stage the unpacked native-module tree (Windows *.node kept as-is — see the
     # NATIVE-MODULE NOTE above) and drop the win-ca crypt32 Windows bindings.
@@ -350,7 +355,7 @@ fi
 setup_logging || exit 1
 setup_electron_env
 cleanup_stale_lock
-migrate_legacy_data_dir
+migrate_legacy_data_dir || exit 1
 repair_html_default
 
 log_message '--- Wispr Flow Launcher Start (NixOS) ---'

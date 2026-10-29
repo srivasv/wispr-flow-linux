@@ -527,6 +527,23 @@ Two rules:
   a re-armed consumer. See [test-methodology.md](test-methodology.md) for the
   headless launch smoke test and what it can and cannot prove.
 
+## Status report fallback and rollback snapshots (1.6.1297)
+
+Wispr 1.6.1297 changes the Status rectangle handler from a Windows block with
+an early return into `if(isWindows && manager.applyReport(...))`, followed by
+an `else if(isWindows)` viewport-mismatch fallback. Widen both predicates for
+Linux X11 while preserving the fallback's viewport checks and rectangle
+normalization. Keep the old handler supported and require exactly one handler
+across the two patterns.
+
+A failed patch must restore its own input, not a shared `index.js.orig` from
+an earlier pipeline step. The Status patch previously restored that older
+snapshot on an anchor miss, removing the already-applied helper environment,
+macOS guard, window frame, and Hub focusability patches. Use a patch-specific
+snapshot refreshed before mutation; test rollback with a stale shared backup
+and earlier patch content present, including a syntax-check failure.
+
+
 ## Cross-references
 
 - [test-methodology.md](test-methodology.md) — the same discipline on the

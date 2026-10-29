@@ -53,7 +53,8 @@ This tier looks at an actual built package. Each
   on-disk files + setuid `chrome-sandbox`, runs `--doctor`, and does a headless
   `xvfb-run` + `dbus-run-session` launch that polls `launcher.log` for the
   helper-ready marker (`Helper service is ready: true`). **Skipped with a clear
-  message when not root or when tooling is missing** — so these scripts are
+  message when not root or when tooling is missing, unless
+  `WISPR_LAUNCH_REQUIRED=1` makes a launch failure fatal** — so these scripts are
   safe to run locally; they will not system-install.
 
 ```bash

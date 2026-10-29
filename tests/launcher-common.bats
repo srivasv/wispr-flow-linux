@@ -625,7 +625,8 @@ _seed_legacy() {
 	printf 'new' > "$target/flow.sqlite-wal"
 	_seed_legacy
 	setup_logging
-	migrate_legacy_data_dir
+	run migrate_legacy_data_dir
+	[[ $status -eq 1 ]]
 	[[ ! -e "$target/flow.sqlite" ]]
 	[[ $(< "$target/flow.sqlite-wal") == 'new' ]]
 	[[ $(< "$legacy/flow.sqlite") == 'db' ]]
@@ -644,7 +645,8 @@ _seed_legacy() {
 	ln -s "myhost-$$" "$target/SingletonLock"
 	_seed_legacy
 	setup_logging
-	migrate_legacy_data_dir
+	run migrate_legacy_data_dir
+	[[ $status -eq 1 ]]
 	[[ ! -e "$target/flow.sqlite" ]]
 	[[ -f "$legacy/flow.sqlite" ]]
 	grep -qF 'Legacy data dir not moved: an instance holds' "$log_file"
@@ -670,6 +672,50 @@ _seed_legacy() {
 		scripts/packaging/appimage.sh nix/wispr-flow.nix; do
 		run grep -A1 -x 'cleanup_stale_lock' "$SCRIPT_DIR/../$f"
 		[[ $status -eq 0 ]]
-		[[ ${lines[1]} == 'migrate_legacy_data_dir' ]]
+		[[ ${lines[1]} == 'migrate_legacy_data_dir || exit 1' ]]
 	done
+}
+
+@test "migration: partial move failure preserves both profiles and can resume" {
+	setup_logging
+	local legacy target
+	legacy=$(wispr_legacy_data_dir)
+	target=$(wispr_config_dir)
+	mkdir -p "$legacy"
+	printf a > "$legacy/a"
+	printf b > "$legacy/b"
+	mv() {
+		[[ $* == *'/b '* ]] && return 1
+		command mv "$@"
+	}
+	run migrate_legacy_data_dir
+	[[ $status -eq 1 ]]
+	[[ $(cat "$target/a") == a ]]
+	[[ $(cat "$legacy/b") == b ]]
+	unset -f mv
+	migrate_legacy_data_dir
+	[[ $(cat "$target/b") == b ]]
+}
+
+@test "HTML repair: failed replacement preserves original and removes temp" {
+	setup_logging
+	local list
+	list=$(wispr_mimeapps_list)
+	printf '[Default Applications]\ntext/html=wispr-flow.desktop;\n' > "$list"
+	cp "$list" "$TEST_TMP/before"
+	mv() { return 1; }
+	run repair_html_default
+	[[ $status -eq 1 ]]
+	cmp -s "$list" "$TEST_TMP/before"
+	[[ $(find "$XDG_CONFIG_HOME" -type f | wc -l) -eq 1 ]]
+}
+
+@test "HTML repair: replacement preserves mode" {
+	setup_logging
+	local list
+	list=$(wispr_mimeapps_list)
+	printf '[Default Applications]\ntext/html=wispr-flow.desktop;\n' > "$list"
+	chmod 600 "$list"
+	repair_html_default
+	[[ $(stat -c %a "$list") == 600 ]]
 }

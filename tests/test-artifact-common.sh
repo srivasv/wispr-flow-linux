@@ -437,7 +437,11 @@ run_dictation_e2e_test() {
 	local skip="Skipping dictation e2e test for $label"
 	if ! { command -v xvfb-run && command -v dbus-run-session \
 		&& command -v setsid && command -v python3; } &>/dev/null; then
-		pass "$skip (xvfb-run/dbus-run-session/setsid/python3 missing)"
+		if [[ ${WISPR_LAUNCH_REQUIRED:-} == 1 ]]; then
+			fail "$label e2e: required launch tools missing"
+		else
+			pass "$skip (xvfb-run/dbus-run-session/setsid/python3 missing)"
+		fi
 		return
 	fi
 
@@ -449,7 +453,7 @@ run_dictation_e2e_test() {
 		return
 	fi
 	if [[ ! -w ${helper%/*} ]]; then
-		pass "$skip (helper dir not writable; needs an extracted AppDir)"
+		fail "$label e2e: helper directory is not writable"
 		return
 	fi
 
@@ -459,7 +463,8 @@ run_dictation_e2e_test() {
 	ctl="$work/ctl"
 	launcher_log="$home/.cache/wispr-flow/launcher.log"
 	xvfb_log="$work/xvfb.log"
-	mkdir -p "$home/.config/Wispr Flow" "$home/.cache"
+	mkdir -p "$home/.config/Wispr Flow" "$home/.cache" "$work/run"
+	chmod 700 "$work/run"
 	mkfifo "$ctl"
 	printf '%s\n' '{"prefs":{"user":{"onboardingCompleted":true}}}' \
 		>"$home/.config/Wispr Flow/config.json"
@@ -467,14 +472,19 @@ run_dictation_e2e_test() {
 
 	_e2e_helper="$helper"
 	_e2e_helper_saved="$helper.e2e-real"
-	mv "$helper" "$_e2e_helper_saved"
+	if [[ -e $_e2e_helper_saved ]] || ! mv "$helper" "$_e2e_helper_saved"; then
+		fail "$label e2e: cannot safely save the real helper"
+		_e2e_helper_saved=''
+		return
+	fi
 	printf '#!/bin/sh\nexec python3 %q "$@"\n' "$fake" >"$helper"
 	chmod +x "$helper"
 
 	# HOME and both XDG dirs point at the scratch profile, so the run never
 	# reads or writes a developer's real Wispr Flow profile or lock.
 	setsid env "HOME=$home" "XDG_CONFIG_HOME=$home/.config" \
-		"XDG_CACHE_HOME=$home/.cache" "WISPR_FAKE_HELPER_CTL=$ctl" \
+		"XDG_CACHE_HOME=$home/.cache" "XDG_RUNTIME_DIR=$work/run" \
+		"WISPR_FAKE_HELPER_CTL=$ctl" \
 		xvfb-run -a -s '-screen 0 1280x720x24' \
 		dbus-run-session -- "$appdir/AppRun" >"$xvfb_log" 2>&1 &
 	_smoke_launch_pid=$!

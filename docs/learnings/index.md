@@ -10,6 +10,7 @@ one of these subsystems, read its page first. I wish I had.
 
 | Deep-dive | What it covers |
 |---|---|
+| [October 2026 upstream reconciliation](upstream-reconciliation-2026-10.md) | Audited baselines, all nine pending PR decisions, retained fork safeguards, upstream contributions and release validation. |
 | [KWin / zbus / tokio](kwin-zbus-tokio.md) | The async-zbus-on-tokio dispatch deadlock that left KDE active-app empty, and the fix. |
 | [GNOME Shell extension](gnome-shell-extension.md) | Install, the relogin requirement, the MRU focus fallback, and the Introspect pivot. |
 | [Electron 42 / V8 14.8 / sqlite](electron42-v8-sqlite.md) | The V8 14.8 ABI patch that lets `better-sqlite3-multiple-ciphers` compile. |

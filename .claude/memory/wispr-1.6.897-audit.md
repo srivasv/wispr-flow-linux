@@ -95,4 +95,3 @@ beside them:
   the launch decision that logs "Not showing hub window at launch: auto
   launch at login is enabled"; widening `o.H8` there to include Linux is the
   whole patch, anchored on that developer string.
-

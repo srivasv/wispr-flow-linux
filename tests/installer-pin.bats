@@ -748,4 +748,3 @@ source_download_electron() {
 	# The stamp is beside the dist, never inside the tree the makers copy.
 	[[ ! -e $dest/.version ]]
 }
-

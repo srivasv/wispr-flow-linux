@@ -189,8 +189,8 @@ else
 	# published; the Linux arm64 package is built from the SAME x64 installer
 	# (the app bundle is arch-neutral JS/asar), so this resolver stays
 	# arch-independent. Emits "<url>\t<sha256>"; a missing/!=1 schemaVersion
-	# only warns (the shape is validated by the keys we actually read, not by
-	# the version number). Exit 2 = unparsable (falls back), 1 = refused.
+	# is rejected for a usable manifest entry. Exit 2 = unparsable
+	# (falls back), 1 = refused.
 	parsed="$(printf '%s' "$manifest" | python3 -c '
 import json, re, sys
 from urllib.parse import urlparse
