@@ -46,6 +46,8 @@ declare -gA MARKER_SAMPLES=(
 	[statuscompact]='return(/*WISPR_LINUX_STATUS_COMPACT*/"linux"===process.platform)?{x:0}:{x:1}'
 	[pickeranchor]='(0,g.Bn)(A.RA.contextMenuWindow,d.qM.ShowAutoPolishPicker,/*WISPR_LINUX_PICKER_ANCHOR*/((p,b)=>b&&p?{...p}:p)(e,b))'
 	[x11statusshape]='/*WISPR_LINUX_X11_STATUS_SHAPE*/globalThis.__wisprLinuxX11StatusShape=(()=>{try{return!1}catch(e){return!1}})();'
+	[statusidle]='/*WISPR_LINUX_STATUS_IDLE_UNMAP*/'
+	[statussurface]='/*WISPR_LINUX_STATUS_SURFACE_REPORT*/'
 )
 
 # Write a fixture app.asar-like file containing every marker, except the one
