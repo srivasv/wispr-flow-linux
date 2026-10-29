@@ -21,6 +21,11 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
   compact box again and toasts such as "Undo" after a cancel show in full.
   Native Wayland is unchanged (#44). Builds on @srivasv's shape-manager port
   in their fork.
+### Fixed
+
+- The mute and pause settings now work during Linux dictation (#120).
+  Audio returns after stop, cancellation, microphone testing, or app exit.
+  Outputs and players already muted or paused keep their state.
 
 ## [v1.0.5] - 2026-10-28
 

@@ -61,3 +61,4 @@ linux-status-x11-shape	main	P	1	the status window's Windows-gated shape manager 
 linux-status-x11-shape	main	F	1	the shape manager's empty-shape fallback	applyShape(this.everEnabled?
 linux-status-x11-shape	main	F	1	the notification EnableMouseEvents channel a clearing toast sends	notification:enableMouseEvents
 upstream	main	F	4	upstream's own Linux platform reads (a new one means a re-audit)	"linux"===process.platform
+linux-dictation-audio	main	F	1	the dictation status setter	updateDictationStatus: ${
