@@ -113,6 +113,7 @@ jobs:
 
           # Previous release tag (most recent that isn't the current one).
           prev_tag=$(gh release list --limit 20 -R "$GITHUB_REPOSITORY" \
+            --exclude-pre-releases \
             --json tagName -q '.[].tagName' \
             | grep -v "^${tag}$" | head -1 || true)
 
@@ -134,14 +135,13 @@ jobs:
             echo "## Installation"
             echo ""
             echo "### APT (Debian/Ubuntu)"
-            echo ""
             echo '```bash'
             echo "curl -fsSL https://pkg.grimwulf.dev/KEY.gpg | sudo gpg --dearmor -o /usr/share/keyrings/wispr-flow.gpg"
             echo 'echo "deb [signed-by=/usr/share/keyrings/wispr-flow.gpg arch=amd64,arm64] https://pkg.grimwulf.dev stable main" | sudo tee /etc/apt/sources.list.d/wispr-flow.list'
             echo "sudo apt update && sudo apt install wispr-flow"
             echo '```'
             echo ""
-            echo "### Download"
+            echo "### Manual download"
             echo ""
             echo "Grab a \`.deb\`, \`.rpm\`, or \`.AppImage\` from the assets below."
             echo ""
@@ -158,10 +158,15 @@ jobs:
         with:
           files: artifacts/**/*
           body_path: notes/summary.md
+          # An rc tag (v1.0.4-rc.1+wispr...) is the hand-pushed look-first
+          # path: it builds, tests and lands here as a pre-release, and the
+          # three package-repo jobs below skip it. See RELEASING.md.
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
 
   update-apt-repo:
     name: Update APT Repository
     needs: [release]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-rc') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -308,13 +313,13 @@ jobs:
   update-dnf-repo:
     name: Update DNF Repository
     needs: [release, update-apt-repo]
-    # Disabled until this fork has its own package repository infrastructure.
+    # This fork publishes APT only.
     if: ${{ false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
-      WORKER_DOMAIN: pkg.wispr-flow-linux.dev
+      WORKER_DOMAIN: pkg.grimwulf.dev
     steps:
       - name: Checkout gh-pages branch
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -383,11 +388,11 @@ jobs:
           printf '%s\n' \
             '[wispr-flow]' \
             'name=Wispr Flow for Fedora/RHEL (unofficial)' \
-            'baseurl=https://pkg.wispr-flow-linux.dev/rpm/$basearch' \
+            'baseurl=https://pkg.grimwulf.dev/rpm/$basearch' \
             'enabled=1' \
             'gpgcheck=1' \
             'repo_gpgcheck=1' \
-            'gpgkey=https://pkg.wispr-flow-linux.dev/KEY.gpg' \
+            'gpgkey=https://pkg.grimwulf.dev/KEY.gpg' \
             'metadata_expire=1h' \
             > rpm/wispr-flow.repo
 
@@ -490,7 +495,7 @@ jobs:
   update-aur-repo:
     name: Update AUR Package
     needs: [release]
-    # Disabled until this fork has its own AUR package.
+    # This fork publishes APT only.
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:

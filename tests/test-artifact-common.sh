@@ -101,6 +101,22 @@ assert_command_succeeds() {
 	fi
 }
 
+assert_asar_no_patch_backups() {
+	local asar="$1" len names
+	len=$(LC_ALL=C od -An -j12 -N4 -tu4 "$asar" 2>/dev/null | tr -d ' ')
+	if [[ ! $len =~ ^[0-9]+$ ]] || (( len == 0 )); then
+		fail "Cannot read the asar header length: $asar"
+		return
+	fi
+	names=$(head -c $((16 + len)) "$asar" \
+		| LC_ALL=C grep -ao '"[^"]*\.orig"' | sort -u | tr '\n' ' ')
+	if [[ -z $names ]]; then
+		pass "No patch backups (*.orig) packed in $asar"
+	else
+		fail "Patch backups packed in $asar: $names"
+	fi
+}
+
 # Locate scripts/verify-patches.sh relative to this file (tests/..).
 _verify_patches_sh() {
 	local d
@@ -120,6 +136,7 @@ validate_app_contents() {
 
 	assert_file_exists "$resources_dir/app.asar"
 	assert_dir_exists "$resources_dir/app.asar.unpacked"
+	assert_asar_no_patch_backups "$resources_dir/app.asar"
 
 	# resources/ and resources/Release/ must be traversable by non-root users:
 	# Electron runs as the user and reads app.asar / the helper from here. A
@@ -186,6 +203,33 @@ _smoke_cache_root=''
 _smoke_xvfb_log=''
 _smoke_pkill_match=''
 
+_smoke_check_backend() {
+	local label="$1" launcher_log="$2"
+	local needle='::backend] injection: '
+	local deadline line backend
+	deadline=$((SECONDS + 5))
+	while ((SECONDS < deadline)); do
+		[[ -f $launcher_log ]] && grep -qF "$needle" "$launcher_log" && break
+		sleep 0.5
+	done
+	line=$(grep -F -m1 "$needle" "$launcher_log" 2>/dev/null)
+	if [[ -z $line ]]; then
+		fail "$label: helper logged no injection backend" \
+			"(no '$needle' line in launcher.log)"
+		return
+	fi
+	backend="${line#*"$needle"}"
+	backend="${backend%%\\n*}"
+	backend="${backend%%\'*}"
+	if [[ $backend == stub* ]]; then
+		fail "$label: helper fell back to the stub injection backend" \
+			"($backend): the session env did not reach the helper" \
+			'(helper-env.sh no-op?)'
+	else
+		pass "$label helper injection backend: $backend"
+	fi
+}
+
 _launch_smoke_cleanup() {
 	if [[ -n $_smoke_launch_pid ]]; then
 		kill -KILL -- "-$_smoke_launch_pid" 2>/dev/null
@@ -214,6 +258,8 @@ _smoke_sandbox_denied() {
 run_launch_smoke_test() {
 	local label="$1" pkill_match="$2" run_as="$3"
 	shift 3
+
+	[[ -n ${CI:-} ]] || pkill_match=''
 
 	local skip="Skipping launch smoke test for $label"
 	if ! { command -v xvfb-run && command -v dbus-run-session \
@@ -283,6 +329,7 @@ run_launch_smoke_test() {
 
 	if ((saw_marker == 1)); then
 		pass "$label reached helper-ready state under Xvfb"
+		_smoke_check_backend "$label" "$launcher_log"
 	else
 		local detail exit_code
 		if kill -0 "$_smoke_launch_pid" 2>/dev/null; then

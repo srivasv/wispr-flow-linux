@@ -85,20 +85,19 @@ let
   # resources/Release/wispr-flow-linux-helper (mode 0755) where the patched
   # main bundle's 'linux' branch looks for it.
   #============================================================================
-  # NOTE: nix is unavailable in the environment this was wired up in, so the
-  # real fixed-output (FOD) hash for the GitHub fetch cannot be computed here.
-  # The first `nix build` WILL FAIL and print the correct `hash = ...`; paste
-  # that value over lib.fakeHash below.
+  # Pinned FOD hash for the helper source fetch. Keep `rev` in step with
+  # helper-version.txt; when it moves, `nix build` fails and prints the new
+  # `hash = ...` to paste in here.
   helperSrc = fetchFromGitHub {
     owner = "wispr-flow-linux";
     repo = "helper";
-    rev = "v0.1.0";
-    hash = lib.fakeHash;
+    rev = "v0.1.3";
+    hash = "sha256-6yImRj0KCgoj6TCnIKSY94jF84ZGF2oz4CKpiBuJIJU=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {
     pname = "wispr-flow-linux-helper";
-    version = "0.1.0";
+    version = "0.1.3";
 
     src = helperSrc;
 
@@ -349,6 +348,7 @@ fi
 setup_logging || exit 1
 setup_electron_env
 cleanup_stale_lock
+migrate_legacy_data_dir
 
 log_message '--- Wispr Flow Launcher Start (NixOS) ---'
 log_message "Timestamp: $(date)"
