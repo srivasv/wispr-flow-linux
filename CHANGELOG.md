@@ -8,6 +8,12 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Find deeply nested Copilot Chat inputs without relying on a cached focus event,
+  and prioritize active windows over stale focus in inactive apps, via helper
+  `v0.1.4-srivas.8`. Keep bounded discovery and GTK/Qt fallback support.
+
 ## [v1.0.16] - 2026-10-30
 
 ### Fixed

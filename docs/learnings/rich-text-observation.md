@@ -97,6 +97,29 @@ omitted newlines in isolated Chromium with both discovery paths. Unit tests
 also cover Unicode offsets, preserved anchors, conflicting carets and unsafe
 whitespace variants. A live Slack dictionary retest remains necessary.
 
+## Copilot Chat can exceed the fallback focus depth
+
+On 2026-10-30, Copilot Chat's focused editable input appeared 43 levels below
+its AT-SPI application root, or 42 below its window. The observer's cached
+focus-event path reached it directly, but the fallback stopped at depth 40.
+This made correction capture depend on whether a usable focus event had been
+seen since the helper started. The timeout was not evidence that the editor
+lacked accessibility support.
+
+A live read-only probe also found an inactive ChatGPT field still marked
+Focused. Sorting active windows first did not prioritize them sufficiently:
+the round-robin walk could reach that shallow stale field before the deeper
+active Copilot input. Search active windows to completion first, retaining
+round-robin traversal within each group, then search unflagged windows for
+GTK/Qt compatibility. Both groups share the same 6,000-node budget and the
+existing eight-second outer deadline. Depth 64 reaches Copilot while retaining
+a finite limit. No text-reading or private-field checks are relaxed.
+
+The fixed fallback reached the same live Copilot object in 311 ms without a
+cached focus event. A private D-Bus regression reproduces both old failures and
+checks shared node/depth limits and unflagged-window fallback. A deeply nested
+Chromium editor exercises correction capture with and without focus events.
+
 ## Sources
 
 - [AT-SPI Hypertext](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Hypertext.html): character-offset-to-link mapping.
