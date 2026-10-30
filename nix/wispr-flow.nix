@@ -77,7 +77,7 @@ let
 
   #============================================================================
   # The clean-room Linux helper, built from its own repo
-  # (github.com/wispr-flow-linux/helper) via Cargo.
+  # (github.com/srivasv/helper) via Cargo.
   #
   # The crate has a committed Cargo.lock, so cargoLock.lockFile gives a fully
   # reproducible, vendored build off the fetched source. Produces
@@ -89,15 +89,15 @@ let
   # helper-version.txt; when it moves, `nix build` fails and prints the new
   # `hash = ...` to paste in here.
   helperSrc = fetchFromGitHub {
-    owner = "wispr-flow-linux";
+    owner = "srivasv";
     repo = "helper";
-    rev = "v0.1.3";
-    hash = "sha256-6yImRj0KCgoj6TCnIKSY94jF84ZGF2oz4CKpiBuJIJU=";
+    rev = "v0.1.4-srivas.2";
+    hash = "sha256-EhnxIGh9f9N0km92CuLUV1/17hCMNNpKsW0rVsORbwA=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {
     pname = "wispr-flow-linux-helper";
-    version = "0.1.3";
+    version = "0.1.4-srivas.2";
 
     src = helperSrc;
 

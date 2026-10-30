@@ -4,7 +4,7 @@
 # for a target arch and print its path (for the HELPER_BIN env var build.sh
 # consumes).
 #
-# The helper lives in its own repo (github.com/wispr-flow-linux/helper) and is
+# The helper lives in its own repo (github.com/srivasv/helper) and is
 # consumed as a prebuilt release asset pinned in helper-version.txt. Each release
 # ships one binary per arch:
 #   wispr-flow-linux-helper-x86_64    (amd64)
@@ -25,7 +25,7 @@
 #===============================================================================
 set -uo pipefail
 
-readonly HELPER_REPO='wispr-flow-linux/helper'
+readonly HELPER_REPO='srivasv/helper'
 
 log() { printf '%s\n' "$*" >&2; }
 die() { printf 'fetch-helper-bin: %s\n' "$*" >&2; exit 1; }

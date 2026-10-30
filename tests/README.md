@@ -117,7 +117,7 @@ upstream bump. It never writes `build-linux/stage` or `extract/`.
 
 You won't find the helper tests here anymore — I moved the clean-room Rust helper
 into its own repo,
-[github.com/wispr-flow-linux/helper](https://github.com/wispr-flow-linux/helper).
+[github.com/srivasv/helper](https://github.com/srivasv/helper).
 That's where its Rust unit tests (`cargo test` + `fmt --check` +
 `clippy -D warnings`) live, along with the Python integration validators (the IPC
 harness, the clipboard/focus/injection round-trips, and the libvirt VM matrix).

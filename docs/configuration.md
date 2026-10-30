@@ -22,6 +22,7 @@ input-method overrides the claude-desktop reference had.
 | `WISPR_USE_WAYLAND` | unset | Set to `1` to force native Wayland (Ozone): pins `--ozone-platform=wayland`, enables the Wayland IME path, and exports `GDK_BACKEND=wayland`. Without it, Electron 42 auto-detects Wayland/X11. |
 | `WISPR_USE_X11` | unset | Set to `1` on a Wayland session to run the app under XWayland (`--ozone-platform=x11`). The status pill then gets X11-style click-through on every compositor, at the cost of blurry HiDPI scaling. Wins over `WISPR_USE_WAYLAND` when both are set; does nothing on an X11 session. The helper is unaffected: it still sees `WAYLAND_DISPLAY` and keeps the `/dev/uinput` injection path. |
 | `WISPR_DISABLE_GPU` | unset | Set to `1` to pass `--disable-gpu --disable-software-rasterizer`. Workaround for blank windows / GPU-process crashes on broken drivers or remote sessions. Also applied automatically inside XRDP sessions. |
+| `WISPR_LINUX_HELPER_PASTE_KEYS` | automatic | Helper override: `ctrl+v` or `ctrl+shift+v`. By default, recognized terminals use Ctrl+Shift+V and other apps use Ctrl+V. Invalid values reject the paste before changing the clipboard. |
 
 ```bash
 # One-off:
@@ -70,6 +71,19 @@ ends or the app exits.
 The deb, rpm, and AUR packages include these tools. AppImage users need
 `pulseaudio-utils` and `playerctl` (`libpulse` and `playerctl` on Arch).
 Missing tools appear in `launcher.log` and do not prevent dictation.
+
+## Learning corrected words
+
+The helper reports edits to recently pasted dictation over AT-SPI so the app's
+existing automatic word-learning setting can process them. Observation ends on
+focus loss, 15 seconds without text changes, or a 120-second watch limit. A newer
+paste cancels the previous observation.
+
+GTK fields expose the needed accessibility interface normally. Chromium and
+Electron targets may need `--force-renderer-accessibility` when starting the
+**target application**. Password fields, terminals, unknown roles, unreadable
+fields and ambiguous pasted spans are skipped. Corrections made before the
+initial observation can be missed.
 
 ## Text injection: `/dev/uinput` access
 

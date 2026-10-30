@@ -31,7 +31,7 @@ RESOURCES_SRC="$NET45_DIR/resources"            # app.asar, app.asar.unpacked, R
 WEBPACK_MAIN="$EXTRACT_DIR/app/.webpack/main/index.js"   # unpacked main bundle (source of truth)
 
 # Clean-room Linux helper. It lives in its own repo
-# (github.com/wispr-flow-linux/helper) and is consumed as a prebuilt release
+# (github.com/srivasv/helper) and is consumed as a prebuilt release
 # asset pinned in helper-version.txt. A pre-set HELPER_BIN (a local build, or
 # CI's prefetched asset) is honored as an override; otherwise the build
 # auto-fetches the pinned release into the local helper-bin/ drop spot
@@ -782,7 +782,7 @@ DOC
       #               cp "$HELPER_BIN" \\
       #                  <resourcesPath>/Release/ && chmod +x <...>
       #               ("$HELPER_BIN" = a prebuilt helper from
-      #                github.com/wispr-flow-linux/helper releases, pinned tag in
+      #                github.com/srivasv/helper releases, pinned tag in
       #                helper-version.txt, or your local checkout's
       #                target/release/wispr-flow-linux-helper)
       #   3. electron <app-dir>   (Linux Electron 42, --no-sandbox if needed)
