@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.11] - 2026-10-29
+
 ### Added
 
 - Terminal-aware paste shortcuts and post-paste correction reporting through
