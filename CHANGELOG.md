@@ -8,6 +8,11 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Observe corrected dictation in GTK4 dialogs that expose a focused text field
+  without an active parent, via helper `v0.1.4-srivas.3`.
+
 ## [v1.0.11] - 2026-10-29
 
 ### Added
@@ -204,7 +209,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.6+wispr1.6.606...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.11+wispr1.6.1297...HEAD
+[v1.0.11]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.10+wispr1.6.1297...v1.0.11+wispr1.6.1297
 [v1.0.6]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.5+wispr1.6.606...v1.0.6+wispr1.6.606
 [v1.0.5]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.4+wispr1.6.7...v1.0.5+wispr1.6.606
 [v1.0.4]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.3+wispr1.5.751...v1.0.4+wispr1.6.7
