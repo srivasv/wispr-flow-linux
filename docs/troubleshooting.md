@@ -489,3 +489,27 @@ See the helper section of [building.md](building.md#the-clean-room-helper-prebui
 Curious which setups are actually validated, and which are only wired through?
 That's all spelled out in [compatibility.md](compatibility.md), and the design
 rationale behind these calls is in [decisions.md](decisions.md).
+
+## Ctrl+Super+Space types s in Konsole
+
+Konsole translates Super-modified printable keys into a `Ctrl+X @ s` prefix.
+An isolated test with Wispr absent reproduced `18 40 73 20` for Super+Space and
+`18 40 73 00` for Ctrl+Super+Space. The shell can expose the trailing `s` and
+space; this is independent of transcript paste.
+
+On KDE, a KWin shortcut can reserve the hands-free combination before Konsole
+receives it. Wispr's evdev monitor still sees the physical shortcut. A no-op
+callback is sufficient:
+
+```javascript
+registerShortcut("wispr-flow-handsfree-guard", "Wispr Flow hands-free input guard",
+    "Ctrl+Meta+Space", function () {});
+```
+
+This is a user-specific desktop setting, so it is not installed by the package.
+Use the [KWin scripting tutorial](https://develop.kde.org/docs/plasma/kwin/)
+to package and enable it across logins. If the Wispr shortcut changes, update
+or disable the matching guard in KDE's shortcut settings.
+
+The prefix is emitted by
+[Konsole's key handling](https://invent.kde.org/utilities/konsole/-/blob/v26.08.2/src/Vt102Emulation.cpp).
