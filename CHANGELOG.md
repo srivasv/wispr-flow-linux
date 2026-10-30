@@ -8,10 +8,17 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Added
+
+- Terminal-aware paste shortcuts and post-paste correction reporting through
+  the helper's AT-SPI observer.
+
 ### Fixed
 
 - Command-mode copy probes no longer return stale clipboard contents when
-  nothing is selected, via helper `v0.1.4-srivas.1`.
+  nothing is selected, via helper `v0.1.4-srivas.2`.
+- Avoid a shell-wide extension-validation override on GNOME 42–44, where the
+  bundled ESM extension cannot load.
 
 ### Changed
 

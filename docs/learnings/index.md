@@ -16,6 +16,7 @@ one of these subsystems, read its page first. I wish I had.
 | [Electron 42 / V8 14.8 / sqlite](electron42-v8-sqlite.md) | The V8 14.8 ABI patch that lets `better-sqlite3-multiple-ciphers` compile. |
 | [The isPackaged / launcher rename](ispackaged-rename.md) | Why an `electron`-named launcher silently breaks DB migrations ("no such table"). |
 | [Wayland injection](wayland-injection.md) | In-process `/dev/uinput` virtual keyboard + `ext-data-control` clipboard. |
+| [October 2026 helper PR review](helper-pr-review-2026-10.md) | Imported parity fixes, deferred PRs, and integration checks. |
 | [Clipboard selection](clipboard-selection.md) | Why an ignored Ctrl+C must not return stale clipboard text to command mode. |
 | [Global key monitor](global-key-monitor.md) | Push-to-talk lives in the helper: XInput2 (X11) / evdev (Wayland) → `KeypressEvent`, and why both PTT and the shortcut recorder were dead without it. |
 | [Helper spawn env](helper-spawn-env.md) | The app spawns the helper with a replacement env (no `process.env`), starving it of `WAYLAND_DISPLAY`/`DISPLAY` → silent no-op `stub` injector; recording works, injection doesn't. |

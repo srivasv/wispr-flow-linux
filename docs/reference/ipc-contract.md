@@ -3,7 +3,9 @@
 # Wispr Flow Helper — IPC contract
 
 Source of truth: `extract/app/.webpack/main/index.js` (webpack-bundled Electron main, v1.5.619).
-Everything below is recovered from that bundle — not inferred. A Linux helper must match this
+The `PasteText` and `UpdateEditedText` payloads in §5 were rechecked against
+the shipped v1.6.1297 bundle. Everything below is recovered from shipped
+bundles, not inferred. A Linux helper must match this
 exactly so the unmodified Electron app talks to it without patching the main process (beyond adding
 a `'linux'` branch to the helper-path resolver).
 
@@ -161,7 +163,16 @@ Linux): `SetAccessibilityGuidance`, `GetSystemSettingsWindowBounds`.
   "PasteText": { "payload": {
     "text": "",                    // plain text to insert
     "htmlText": "",                // HTML variant (set both clipboard formats)
-    "transcriptEntityUUID": ""     // correlation id for analytics
+    "pasteId": ""                 // echoed by UpdateEditedText
+  } } } }
+
+// ---- UpdateEditedText (helper → Electron request) ----
+// The app can compare these strings to learn corrected words. Unsupported or
+// private fields may produce no report. Other observation metadata is optional.
+{ "HelperAPIRequest": { "uuid": "",
+  "UpdateEditedText": { "payload": {
+    "pasteId": "", "pastedText": "", "editedText": "",
+    "contentObservationEndReason": "focus_changed" // optional string
   } } } }
 
 // ---- SimulateKeyPress (req) ----
