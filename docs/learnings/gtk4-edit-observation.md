@@ -44,3 +44,37 @@ checks this traversal using a D-Bus fixture with a non-editable focused parent.
 The launcher uses `$XDG_CACHE_HOME/wispr-flow/launcher.log` when that variable
 is set. Check the running app's stdout destination when an expected log is empty;
 `~/.cache/wispr-flow/launcher.log` may belong to an older launch.
+
+## Field focus must be independent of app identification
+
+The KWin and GNOME providers identify the active app but do not run the AT-SPI
+app tracker. Coupling field-focus caching to that tracker left edit observation
+without events on those desktops. The helper now starts its own field listener
+regardless of provider, subscribing to both GTK focused-state changes and Qt
+legacy focus events. Validate the cached field before reading text; clear it on
+matching focus loss without letting a late blur erase a newer target.
+
+A global depth-first fallback spent its 6,000-node budget in Plasma and Dolphin
+before reaching Zenity. Fair traversal visits one node per window per round.
+The live focus probe changed from no result after 6.15 seconds to a Zenity match
+in 375 ms. Real GTK4 and Qt dialog tests cover both events and fallback, and a
+D-Bus fixture catches large-tree starvation with a deliberately tiny budget.
+
+AT-SPI Collection can avoid client-side tree traversal, but the tested GTK4
+Zenity root and window did not advertise it. Do not require Collection or enable
+a screen reader to observe fields. Toolkit accessibility is sufficient here.
+
+References: [AT-SPI Collection](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Collection.html)
+and [event registration](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/method.EventListener.register.html).
+
+Qt Quick text-field tests also pass with both focus events and fallback search.
+They run separately with `edit_observation_test.py --qtquick` (after the build
+manifest argument) and require a Qt 6 QML runtime plus Qt Quick Controls. The
+default CI matrix covers GTK4 and Qt Widgets. A passing Qt Quick fixture does
+not imply every Plasma widget exposes a usable editable Text interface.
+
+Qt 5 uses the older `siiv(so)` accessibility event body, ending in an application
+reference, whereas the Rust AT-SPI decoder expects `siiva{sv}`. A narrow focus
+decoder accepts either shape and rejects malformed or unrelated signals. The
+Ubuntu Qt 5 KDialog event case reproduced the failure locally, then passed after
+the compatibility fix; GTK4, Qt 6 Widgets and Qt Quick passed both paths too.

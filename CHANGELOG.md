@@ -8,6 +8,12 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Track GTK and Qt field-focus events independently of the compositor app
+  provider and prevent large desktop trees from starving correction discovery,
+  via helper `v0.1.4-srivas.5`.
+
 ## [v1.0.13] - 2026-10-30
 
 ### Fixed
