@@ -17,8 +17,11 @@ field. The error was logged only at debug level, so the normal launcher log had
 no successful `atspi_edit` report.
 
 The fix prefers active windows, then checks other top-level windows for the
-focused field. All traversal shares the existing node budget and timeout.
-Role, focus, editability and text-anchor validation still gate reads and reports.
+focused field. Each walk shares one node budget across windows. The existing
+eight-second timeout also bounds retries while toolkits register with a freshly
+started accessibility registry. CI exposed that startup race after the parent
+state fix. Role, focus, editability and text-anchor validation still gate reads
+and reports.
 
 The helper's `gtk4_edit_test.py` runs real GTK4 Zenity under a private Xvfb and
 D-Bus session. It calls the observer without starting an AT-SPI focus tracker,

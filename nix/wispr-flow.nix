@@ -92,7 +92,7 @@ let
     owner = "srivasv";
     repo = "helper";
     rev = "v0.1.4-srivas.3";
-    hash = "sha256-+XvbDhSTHlOIq9IEzSdLnAud3AWveKDv7vbOnvaRLVw=";
+    hash = "sha256-u/+QLWL0yPvspmBKGL6bSdV2wq3WTPpDVd5meMF5B/s=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {
