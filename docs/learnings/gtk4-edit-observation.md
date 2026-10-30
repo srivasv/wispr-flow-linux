@@ -66,3 +66,9 @@ a screen reader to observe fields. Toolkit accessibility is sufficient here.
 
 References: [AT-SPI Collection](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Collection.html)
 and [event registration](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/method.EventListener.register.html).
+
+Qt Quick text-field tests also pass with both focus events and fallback search.
+They run separately with `edit_observation_test.py --qtquick` (after the build
+manifest argument) and require a Qt 6 QML runtime plus Qt Quick Controls. The
+default CI matrix covers GTK4 and Qt Widgets. A passing Qt Quick fixture does
+not imply every Plasma widget exposes a usable editable Text interface.
