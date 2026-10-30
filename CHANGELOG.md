@@ -8,6 +8,12 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Observe corrections in supported Chromium rich-text editors through bounded
+  AT-SPI Hypertext expansion, via helper `v0.1.4-srivas.6`. Skip ambiguous or
+  unsafe fields while retaining plain GTK and Qt field support.
+
 ## [v1.0.14] - 2026-10-30
 
 ### Fixed
