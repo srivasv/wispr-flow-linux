@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.16] - 2026-10-30
+
+### Fixed
+
+- Observe corrections when a rich-text editor omits the dictated text's trailing
+  spaces, via helper `v0.1.4-srivas.7`. Require a unique field-ending match and
+  preserve the existing caret, privacy and ambiguity checks.
+
 ## [v1.0.15] - 2026-10-30
 
 ### Fixed

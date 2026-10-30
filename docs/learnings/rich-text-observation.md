@@ -5,7 +5,8 @@ before matching dictated text for correction observation.
 
 - ChatGPT and Slack reproduced the same structure on 2026-10-30.
 - Helper `0.1.4-srivas.6` adds bounded Hypertext reading for these editors.
-- Real application dictionary acceptance still needs a post-install retest.
+- ChatGPT correction forwarding was confirmed after installation; Slack needed
+  the trailing-space baseline fix described below.
 
 ## The focused entry contains a placeholder
 
@@ -73,6 +74,28 @@ parents, timeouts, character/depth/node limits and recreated paragraph objects.
 GTK4, Qt Widgets, Qt Quick and the real-IPC paste/correction suite remain
 regressions. Disabling embedded expansion makes the Chromium paragraph case
 fail with `pasted text not found in field`.
+
+## Slack omits a trailing space from the baseline
+
+The 2026-10-30 Slack diagnostic test returned 36 accessible characters for a
+37-character paste on all four baseline attempts. The pasted string had one
+trailing whitespace character; trimming produced a unique exact match. No
+snapshot read failed, and no correction request reached word extraction.
+
+Helper `0.1.4-srivas.7` first attempts the existing exact match. Its fallback
+allows only omitted trailing ASCII spaces when no caret is available, no full
+exact occurrence exists, and the remaining nonblank phrase occurs uniquely at
+the end of the field. It does not trim leading whitespace, normalize interior
+text, remove newlines/tabs, or accept a partial trailing-space match. Anchors
+use the actual observed character span rather than the longer paste length.
+An unchanged observed span reports the original pasted string so presentation
+alone does not appear to be a correction. Real corrections report the observed
+edited text, retaining the original `pastedText` in the IPC payload.
+
+Regression cases cover corrections, formatting-only changes, ambiguity and
+omitted newlines in isolated Chromium with both discovery paths. Unit tests
+also cover Unicode offsets, preserved anchors, conflicting carets and unsafe
+whitespace variants. A live Slack dictionary retest remains necessary.
 
 ## Sources
 
