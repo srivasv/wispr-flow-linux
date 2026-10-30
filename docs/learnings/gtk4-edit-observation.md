@@ -72,3 +72,9 @@ They run separately with `edit_observation_test.py --qtquick` (after the build
 manifest argument) and require a Qt 6 QML runtime plus Qt Quick Controls. The
 default CI matrix covers GTK4 and Qt Widgets. A passing Qt Quick fixture does
 not imply every Plasma widget exposes a usable editable Text interface.
+
+Qt 5 uses the older `siiv(so)` accessibility event body, ending in an application
+reference, whereas the Rust AT-SPI decoder expects `siiva{sv}`. A narrow focus
+decoder accepts either shape and rejects malformed or unrelated signals. The
+Ubuntu Qt 5 KDialog event case reproduced the failure locally, then passed after
+the compatibility fix; GTK4, Qt 6 Widgets and Qt Quick passed both paths too.
