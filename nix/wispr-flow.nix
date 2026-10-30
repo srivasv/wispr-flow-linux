@@ -91,13 +91,13 @@ let
   helperSrc = fetchFromGitHub {
     owner = "srivasv";
     repo = "helper";
-    rev = "v0.1.4-srivas.7";
-    hash = "sha256-3hPCpMuQEykUocF2QYTxG3NTi3X+K/+Y5zdVcGRAwCM=";
+    rev = "v0.1.4-srivas.8";
+    hash = "sha256-GPgiPuO0W7PeC4b9TAsWbqQLl0Crozti6u+dV8S8qh4=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {
     pname = "wispr-flow-linux-helper";
-    version = "0.1.4-srivas.7";
+    version = "0.1.4-srivas.8";
 
     src = helperSrc;
 

@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.17] - 2026-10-30
+
+### Fixed
+
+- Find deeply nested Copilot Chat inputs without relying on a cached focus event,
+  and prioritize active windows over stale focus in inactive apps, via helper
+  `v0.1.4-srivas.8`. Keep bounded discovery and GTK/Qt fallback support.
+
 ## [v1.0.16] - 2026-10-30
 
 ### Fixed
@@ -242,7 +250,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.14+wispr1.6.1324...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.17+wispr1.6.1324...HEAD
+[v1.0.17]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.16+wispr1.6.1324...v1.0.17+wispr1.6.1324
 [v1.0.14]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.13+wispr1.6.1324...v1.0.14+wispr1.6.1324
 [v1.0.13]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.12+wispr1.6.1324...v1.0.13+wispr1.6.1324
 [v1.0.12]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.11+wispr1.6.1297...v1.0.12+wispr1.6.1297
