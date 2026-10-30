@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.19] - 2026-10-30
+
+### Fixed
+
+- Use Ctrl+Shift+V in focused embedded terminals such as VS Code without
+  changing ordinary editor paste shortcuts, via helper `v0.1.4-srivas.10`.
+- Read selected text from deeply nested editors such as Codex and call the
+  AT-SPI selection method with its correct wire spelling.
+
 ## [v1.0.18] - 2026-10-30
 
 ### Fixed
