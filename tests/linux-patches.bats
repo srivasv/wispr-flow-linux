@@ -1816,3 +1816,37 @@ status_shape_1297() {
 		[[ $status -eq 0 ]]
 	done
 }
+
+_style_fixture() {
+	cat > "$FIX" <<'JS'
+const modules={0(e,t,n){},1(e,t,n){const a=n(2),p=n(3),d=n(4);const choose=({voices:e,appName:t,bundleId:n,url:r})=>{return(e=>e.other??(0,a.IQ)().other)(e)},kind=(n,r)=>(0,p.A0)((0,d.getAppType)(n,r),n,r);p.personalizationStyleSettings={};const result={matchedVoiceType:choose};},2(e,t,n){}};
+JS
+}
+
+@test "app-style: applies, parses, and is idempotent" {
+	_style_fixture
+	run bash "$PATCH_DIR/linux-app-style-fallback.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	grep -qF 'if("linux"===process.platform)' "$FIX"
+	node_check "$FIX"
+	assert_idempotent "$PATCH_DIR/linux-app-style-fallback.sh" "$FIX"
+}
+
+@test "app-style: near-miss scope fails and preserves earlier patches" {
+	_style_fixture
+	sed -i 's/voices:e/voices:x/' "$FIX"
+	printf '\n/*earlier-patch*/\n' >> "$FIX"
+	cp "$FIX" "$TEST_TMP/before.js"
+	run bash "$PATCH_DIR/linux-app-style-fallback.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	cmp "$FIX" "$TEST_TMP/before.js"
+}
+
+@test "app-style: duplicate fallback fails without mutation" {
+	_style_fixture
+	sed -i 's/return(e=>e.other/return(e=>e.other??(0,a.IQ)().other)(e);return(e=>e.other/' "$FIX"
+	cp "$FIX" "$TEST_TMP/before.js"
+	run bash "$PATCH_DIR/linux-app-style-fallback.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	cmp "$FIX" "$TEST_TMP/before.js"
+}

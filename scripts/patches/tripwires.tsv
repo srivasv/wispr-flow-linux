@@ -65,3 +65,4 @@ linux-status-x11-shape	main	F	1	the notification EnableMouseEvents channel a cle
 # 1297 adds a safeStorage basic_text refusal; exclude this audited optional guard.
 upstream	main	P	4	Linux platform reads excluding the audited credential guard	"linux"===process\.platform(?!&&"basic_text"===)
 linux-dictation-audio	main	F	1	the dictation status setter	updateDictationStatus: ${
+linux-app-style-fallback	main	P	1	the My Voice generic fallback	return\(([\w$]+)=>\1\.other\?\?\(0,[\w$]+\.IQ\)\(\)\.other\)\(\1\)
