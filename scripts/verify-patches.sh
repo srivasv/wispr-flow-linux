@@ -61,6 +61,7 @@ fi
 # Each entry: "human label|grep mode|pattern"
 #   mode F = fixed string (grep -aF), P = Perl regex (grep -aP)
 MARKERS=(
+  "app-style-fallback|F|WISPR_LINUX_APP_STYLE_FALLBACK"
   "dictation-audio: Linux mute and pause controls|F|/*WISPR_LINUX_DICTATION_AUDIO*/"
   "dictation-audio: Linux audio worker|F|WISPR_LINUX_DICTATION_AUDIO_RUNTIME"
   "helper-resolver: Linux branch marker|F|WISPR_LINUX_HELPER_BRANCH"

@@ -67,6 +67,9 @@ the ways it bites.
 
 ## Testing
 
+- [**Application-aware styles**](testing-app-styles.md) — five-minute release
+  validation for native apps, browser sites, and generic fallback.
+
 - [**Testing overview**](../tests/README.md) — bats unit tests, artifact tests,
   the Rust helper suite, and the manual VM-matrix validators
 - [**Test methodology**](learnings/test-methodology.md) — how a green shell

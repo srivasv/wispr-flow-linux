@@ -360,6 +360,10 @@ step3_patch_bundle() {
     # binding and no way past the onboarding shortcuts step (issues #33, #46).
     # Only the two default-seeding ternaries are widened; the flag's other ~79
     # consumers (Windows-only OS/registry/path APIs) keep the real platform.
+    auto "Running linux-app-style-fallback.sh on $target_bundle"
+    bash "$SCRIPT_DIR/patches/linux-app-style-fallback.sh" "$target_bundle" \
+      || die "App-style fallback patch failed."
+
     auto "Running linux-main-shortcut-defaults.sh on $target_bundle"
     bash "$SCRIPT_DIR/patches/linux-main-shortcut-defaults.sh" "$target_bundle" \
       || die "Shortcut-defaults patch failed -- see linux-main-shortcut-defaults.sh output above."

@@ -28,6 +28,7 @@ teardown() {
 # Sample lines, each carrying exactly one marker the script greps for.
 # Keyed by a short name so the negative tests can omit one at a time.
 declare -gA MARKER_SAMPLES=(
+	[appstyle]='/*WISPR_LINUX_APP_STYLE_FALLBACK*/'
 	[dictationaudio]='/*WISPR_LINUX_DICTATION_AUDIO*/'
 	[audioworker]='/*WISPR_LINUX_DICTATION_AUDIO_RUNTIME*/'
 	[branch]='if (process.env.WISPR_LINUX_HELPER_BRANCH) { return "linux"; }'

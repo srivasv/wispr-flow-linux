@@ -20,6 +20,7 @@ one of these subsystems, read its page first. I wish I had.
 | [Rich-text correction observation](rich-text-observation.md) | ChatGPT/Slack embedded-text structure and bounded Hypertext reading. |
 | [GTK4 edit observation](gtk4-edit-observation.md) | Focused GTK4 fields can lack an active parent; regression coverage without a focus tracker. |
 | [Clipboard selection](clipboard-selection.md) | Why an ignored Ctrl+C must not return stale clipboard text to command mode. |
+| [Active application and dictation styles](active-app-styles.md) | Helper focus events, native-provider precedence, and style classification checks. |
 | [Global key monitor](global-key-monitor.md) | Push-to-talk lives in the helper: XInput2 (X11) / evdev (Wayland) → `KeypressEvent`, and why both PTT and the shortcut recorder were dead without it. |
 | [Helper spawn env](helper-spawn-env.md) | The app spawns the helper with a replacement env (no `process.env`), starving it of `WAYLAND_DISPLAY`/`DISPLAY` → silent no-op `stub` injector; recording works, injection doesn't. |
 | [Platform gates](platform-gates.md) | The darwin/win32 carve-outs Linux falls through: the `.linux`-matches-no-CSS bug behind the shifted side menu, the three gate-shape rules, and how to re-audit a new Wispr version. |

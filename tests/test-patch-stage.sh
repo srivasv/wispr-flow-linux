@@ -210,6 +210,10 @@ main() {
 	_check "all $total JS files under .webpack/ parse" \
 		test "$broken" -eq 0 -a "$total" -gt 0
 
+	_check 'app classifier: style categories, fallbacks, manual override' \
+		node "$project_root/tests/test-app-style.cjs" \
+		"$tmp/verify/.webpack/main/index.js"
+
 	echo '=== marker check ==='
 	bash "$project_root/scripts/verify-patches.sh" "$tmp/app.asar" \
 		> "$tmp/verify.log" 2>&1

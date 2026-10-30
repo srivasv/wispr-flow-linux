@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.18] - 2026-10-30
+
+### Fixed
+
+- Use the detected category for unassigned Linux My Voice apps while preserving
+  explicit assignments. Normalize Linux app identifiers and detect Gmail,
+  Slack, LinkedIn, WhatsApp, and Telegram browser URLs via helper
+  `v0.1.4-srivas.9`, with Other as the fallback.
+
 ## [v1.0.17] - 2026-10-30
 
 ### Fixed
