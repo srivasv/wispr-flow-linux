@@ -46,18 +46,20 @@ Windows installer). It is two things:
    Flow ships only for macOS (Swift) and Windows (C#): injecting transcribed text
    into the focused application. It is built from the documented IPC contract
    (`docs/reference/`) and contains **no Wispr Flow code**. It now lives
-   in its own repo (`wispr-flow-linux/helper`); see the Repo layout below.
+   in its own repo (`srivasv/helper`); see the Repo layout below.
 
 ## Repo layout
 
-The project spans **two repositories** under the `wispr-flow-linux` org:
+This fork uses **two repositories** under `srivasv`:
 
-- **`wispr-flow-linux/wispr-flow-linux` (this repo)** — the public-domain build
+- **`srivasv/wispr-flow-linux` (this repo)** — the public-domain build
   scripts and the local packaging makers.
-- **`wispr-flow-linux/helper`** — the clean-room Rust helper. It was extracted
+- **`srivasv/helper`** — our fork of the clean-room Rust helper. It was extracted
   from this repo and no longer lives here as a local source tree. The helper is
   consumed as a **prebuilt binary** pinned in `helper-version.txt` and staged
-  via the `HELPER_BIN` env var (build-linux.sh resolves it).
+  via the `HELPER_BIN` env var (build-linux.sh resolves it). We publish
+  `v<version>-srivas.<revision>` releases independently and submit source fixes
+  to `wispr-flow-linux/helper`. Nix pins the same fork release and source hash.
 
 > The hosted distribution layer — the `gh-pages` APT/DNF tree, the `v*` tag
 > Releases, the publish/heartbeat workflows, and a `wispr-flow-linux/worker`
@@ -132,7 +134,7 @@ the last resort.
 ### Rust
 
 The helper's code and its `cargo fmt` / `cargo clippy --all-targets -- -D
-warnings` / `cargo test` gates live in its own repo (`wispr-flow-linux/helper`).
+warnings` / `cargo test` gates live in its own repo (`srivasv/helper`).
 This repo consumes the prebuilt binary pinned in `helper-version.txt`.
 
 ### Docs / CHANGELOG

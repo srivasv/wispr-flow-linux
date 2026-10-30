@@ -27,7 +27,7 @@ for you via `scripts/setup/dependencies.sh`. Here are the logical deps:
 | `convert` | `imagemagick` / `ImageMagick` | icon resize/convert to Linux sizes |
 | `rsync` | `rsync` | stage the resources tree |
 | `node`, `npx` | `nodejs`, `npm` | `@electron/asar` pack/unpack + `@electron/rebuild` |
-| `cargo` *(optional)* | `cargo` | only to build the helper yourself from [its repo](https://github.com/wispr-flow-linux/helper); not needed for this repo's packages |
+| `cargo` *(optional)* | `cargo` | only to build the helper yourself from [its repo](https://github.com/srivasv/helper); not needed for this repo's packages |
 | `wget` **or** `curl` | `wget` / `curl` | download the Linux Electron runtime |
 
 Format-specific (only the one you build):
@@ -134,7 +134,7 @@ build script for, so the extract/repack half transfers cleanly. The hard part is
 unique to Wispr Flow. Its text-injection "Helper" process exists only as macOS
 (Swift) and Windows (C#) binaries, with no Linux variant and no source. A
 clean-room Rust helper
-([github.com/wispr-flow-linux/helper](https://github.com/wispr-flow-linux/helper))
+([github.com/srivasv/helper](https://github.com/srivasv/helper))
 reimplements it. This build no longer compiles the helper. By default it
 auto-fetches the prebuilt binary pinned in `helper-version.txt` and stages it;
 set `HELPER_BIN` to use a local build instead (see below). The app bundle is
@@ -178,9 +178,22 @@ you don't pick the runtime by hand.
 
 ### The clean-room helper (prebuilt, with a `HELPER_BIN` override)
 
+This fork publishes helper binaries independently from
+[`srivasv/helper`](https://github.com/srivasv/helper), with fork-specific
+`v<version>-srivas.<revision>` tags. Source fixes are also submitted upstream.
+The existing helper release workflow builds both architectures on Ubuntu 22.04
+and checks the glibc 2.35 floor before publishing. After a helper release,
+update `helper-version.txt` and the matching source revision, hash, and version
+in `nix/wispr-flow.nix`. If pushing a tag does not start a release run, dispatch
+`release.yml` against that tag explicitly:
+
+```bash
+gh workflow run release.yml --repo srivasv/helper --ref v0.1.4-srivas.1
+```
+
 The helper is consumed like the native modules: a prebuilt release asset pinned
 in `helper-version.txt`. When `HELPER_BIN` is unset, staging auto-fetches that
-tag from the [helper repo](https://github.com/wispr-flow-linux/helper)'s
+tag from the [helper repo](https://github.com/srivasv/helper)'s
 releases into `helper-bin/` via `scripts/setup/fetch-helper-bin.sh` — no env
 var, no manual step.
 

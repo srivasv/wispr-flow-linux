@@ -8,6 +8,16 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Command-mode copy probes no longer return stale clipboard contents when
+  nothing is selected, via helper `v0.1.4-srivas.1`.
+
+### Changed
+
+- Consume independently published helper binaries and Nix sources from
+  `srivasv/helper`.
+
 ## [v1.0.10] - 2026-10-29
 
 ### Added
