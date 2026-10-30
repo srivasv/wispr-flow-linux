@@ -188,7 +188,7 @@ in `nix/wispr-flow.nix`. If pushing a tag does not start a release run, dispatch
 `release.yml` against that tag explicitly:
 
 ```bash
-gh workflow run release.yml --repo srivasv/helper --ref v0.1.4-srivas.4
+gh workflow run release.yml --repo srivasv/helper --ref v0.1.4-srivas.5
 ```
 
 The helper is consumed like the native modules: a prebuilt release asset pinned

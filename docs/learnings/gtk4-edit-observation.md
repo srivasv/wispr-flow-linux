@@ -44,3 +44,25 @@ checks this traversal using a D-Bus fixture with a non-editable focused parent.
 The launcher uses `$XDG_CACHE_HOME/wispr-flow/launcher.log` when that variable
 is set. Check the running app's stdout destination when an expected log is empty;
 `~/.cache/wispr-flow/launcher.log` may belong to an older launch.
+
+## Field focus must be independent of app identification
+
+The KWin and GNOME providers identify the active app but do not run the AT-SPI
+app tracker. Coupling field-focus caching to that tracker left edit observation
+without events on those desktops. The helper now starts its own field listener
+regardless of provider, subscribing to both GTK focused-state changes and Qt
+legacy focus events. Validate the cached field before reading text; clear it on
+matching focus loss without letting a late blur erase a newer target.
+
+A global depth-first fallback spent its 6,000-node budget in Plasma and Dolphin
+before reaching Zenity. Fair traversal visits one node per window per round.
+The live focus probe changed from no result after 6.15 seconds to a Zenity match
+in 375 ms. Real GTK4 and Qt dialog tests cover both events and fallback, and a
+D-Bus fixture catches large-tree starvation with a deliberately tiny budget.
+
+AT-SPI Collection can avoid client-side tree traversal, but the tested GTK4
+Zenity root and window did not advertise it. Do not require Collection or enable
+a screen reader to observe fields. Toolkit accessibility is sufficient here.
+
+References: [AT-SPI Collection](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Collection.html)
+and [event registration](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/method.EventListener.register.html).
