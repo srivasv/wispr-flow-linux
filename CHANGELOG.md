@@ -8,6 +8,11 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Skip focused, non-editable desktop widgets when finding the dictation field
+  for correction observation, via helper `v0.1.4-srivas.4`.
+
 ## [v1.0.12] - 2026-10-29
 
 ### Fixed

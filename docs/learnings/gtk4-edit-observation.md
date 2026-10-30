@@ -31,3 +31,16 @@ code and passes with the fallback fix. A GTK3-only fixture had missed this gap.
 The toolkit's [Focused state](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/enum.StateType.html)
 identifies keyboard focus; field discovery must not assume the parent also
 advertises `Active`.
+
+## Focused desktop widgets can precede the text field
+
+KDE Plasma can expose focused objects while another application owns keyboard
+focus. A walk that stops at the first Focused object can select Plasma instead
+of Zenity and abort with `field is not focused and editable`. Edit observation
+requires Editable during discovery, so the walk continues past desktop widgets;
+selection reads still allow read-only fields. The isolated GTK4 test now also
+checks this traversal using a D-Bus fixture with a non-editable focused parent.
+
+The launcher uses `$XDG_CACHE_HOME/wispr-flow/launcher.log` when that variable
+is set. Check the running app's stdout destination when an expected log is empty;
+`~/.cache/wispr-flow/launcher.log` may belong to an older launch.
