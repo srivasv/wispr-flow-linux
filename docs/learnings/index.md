@@ -17,6 +17,7 @@ one of these subsystems, read its page first. I wish I had.
 | [The isPackaged / launcher rename](ispackaged-rename.md) | Why an `electron`-named launcher silently breaks DB migrations ("no such table"). |
 | [Wayland injection](wayland-injection.md) | In-process `/dev/uinput` virtual keyboard + `ext-data-control` clipboard. |
 | [October 2026 helper PR review](helper-pr-review-2026-10.md) | Imported parity fixes, deferred PRs, and integration checks. |
+| [Rich-text correction observation](rich-text-observation.md) | ChatGPT/Slack embedded-text structure and bounded Hypertext reading. |
 | [GTK4 edit observation](gtk4-edit-observation.md) | Focused GTK4 fields can lack an active parent; regression coverage without a focus tracker. |
 | [Clipboard selection](clipboard-selection.md) | Why an ignored Ctrl+C must not return stale clipboard text to command mode. |
 | [Global key monitor](global-key-monitor.md) | Push-to-talk lives in the helper: XInput2 (X11) / evdev (Wayland) → `KeypressEvent`, and why both PTT and the shortcut recorder were dead without it. |
