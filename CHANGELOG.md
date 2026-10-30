@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.13] - 2026-10-30
+
 ### Fixed
 
 - Skip focused, non-editable desktop widgets when finding the dictation field
@@ -216,7 +218,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.12+wispr1.6.1297...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.13+wispr1.6.1324...HEAD
+[v1.0.13]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.12+wispr1.6.1324...v1.0.13+wispr1.6.1324
 [v1.0.12]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.11+wispr1.6.1297...v1.0.12+wispr1.6.1297
 [v1.0.11]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.10+wispr1.6.1297...v1.0.11+wispr1.6.1297
 [v1.0.6]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.5+wispr1.6.606...v1.0.6+wispr1.6.606
