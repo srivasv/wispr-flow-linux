@@ -8,6 +8,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.15] - 2026-10-30
+
 ### Fixed
 
 - Observe corrections in supported Chromium rich-text editors through bounded
