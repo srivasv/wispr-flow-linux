@@ -91,8 +91,8 @@ let
   helperSrc = fetchFromGitHub {
     owner = "srivasv";
     repo = "helper";
-    rev = "v0.1.4-srivas.10";
-    hash = "sha256-qyY2HJLfeInQu/N92yUkEWOjRktPstxymkbbbZoEtT4=";
+    rev = "v0.1.4-srivas.11";
+    hash = "sha256-tRER+KCrh7TWhQc0W0/PjxaRkn/nAFf4g0rlKPJnA+U=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {

@@ -66,12 +66,33 @@ runtime dependencies are used. Keyboard and correction IPC bypass the URL
 worker, so a slow accessibility provider cannot block those messages.
 
 The worker requires a recognized browser and one matching active window,
-searches at most 300 objects to depth 32, and times out after 200 ms. It does
-not descend into embedded documents. It checks the window and URL again
+searches at most 300 objects to depth 32, and times out after 250 ms. It does
+not descend into page documents. Vivaldi is the exception: its built-in
+`mpognobbkildjkofajifpdfhcoklimli` interface wraps the actual page, so only
+that browser-owned wrapper is traversed. Browser tab-label lists are skipped.
+It checks the window and URL again
 before accepting the result. Old focus generations are discarded. Browser
 context is polled every 250 ms while detection is enabled so a same-title tab
 change still updates the app's style. A failed read clears the previous URL.
 Headless sessions never open an accessibility connection for URL detection.
+
+A live Chrome window can expose `chrome://newtab-footer/` alongside the
+active page, with both marked showing. Ignore only that exact internal footer;
+multiple real pages remain ambiguous. The original single-page test profile
+missed this. Live scans of LinkedIn, WhatsApp, and Telegram took 230–260 ms,
+exceeding the old 200 ms limit. Raising it to 500 ms was insufficient:
+Flow allows only 300 ms for `GetActiveAppInfo`. Up to 16 concurrent metadata
+reads now shorten discovery and traversal; the hard budget is 250 ms.
+Discovery checks process identity through the bus daemon before querying
+application accessibility names. Unrelated apps get only a 10 ms name
+fallback: a busy Electron window must not stall browser detection at startup.
+Queries queued during a scan share its freshly validated result only when
+the focus generation, browser ID, and window title still match. This is not
+a time-based URL cache; failed reads still clear the URL. Vivaldi's tab-label
+trees also exceeded the
+300-object budget until tab selectors were skipped. Keep the node/depth limits
+and the bounded timeout; do not select the first recognized hostname from
+multiple real documents.
 
 Only recognized site hostnames are sent to Electron: `mail.google.com`,
 `app.slack.com` (including workspace subdomains), `linkedin.com`,
@@ -143,3 +164,12 @@ it does not contact the real services or require login. The bundled selector
 checks verify how those hosts map to styles, rather than asserting on the
 output of a remote transcription model. Live native Wayland browser behavior
 still needs manual validation.
+
+On 2026-11-01, normal-pace full dictation with the clean local helper passed
+three Chrome LinkedIn attempts (Work) and two Vivaldi WhatsApp attempts
+(Personal), including first attempts and browser transitions. Each following
+app event retained the correct hostname. A subsequent non-browser dictation
+selected Other. Vivaldi Gmail and LinkedIn and Chrome WhatsApp and Telegram
+also passed earlier live routing checks. Vivaldi Telegram was skipped. These
+results validate routing on this desktop, not every compositor or subjective
+transcription wording. The shipped 1.6.1337 classifier check also passes.

@@ -62,8 +62,12 @@ transcription. Watch the launcher log while dictating:
 
 ```bash
 tail -F "${XDG_CACHE_HOME:-$HOME/.cache}/wispr-flow/launcher.log" \
-  | grep --line-buffered -E '\[App Change\]|\[MyVoice\]'
+  | grep --line-buffered -E '\[App Change\]|\[MyVoice\]|myVoiceEnabled:|appName:|bundleId:|matchedVoiceType:|stylePreference:|personalizationAppType:'
 ```
+
+Style details occupy separate lines after `[MyVoice]`; filtering only for
+that prefix hides them. To inspect recent tests, replace `tail -F` with
+`tail -n 2000` in the command above.
 
 Look for the hostname in the app-change entry, then
 `personalizationAppType` and, when My Voice is enabled, `matchedVoiceType` in
