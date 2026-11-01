@@ -8,6 +8,17 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.21] - 2026-11-01
+
+### Fixed
+
+- Detect VS Code terminal fields before the focus lookup deadline so dictation
+  uses Ctrl+Shift+V, via helper `v0.1.4-srivas.12`.
+- Read the selected words in Slack's rich-text paragraphs instead of embedded
+  object placeholders, including partial selections and Unicode.
+- Report paste outcomes so transforms complete instead of incorrectly showing
+  "Textbox is not editable" after a successful injection.
+
 ## [v1.0.20] - 2026-11-01
 
 ### Fixed

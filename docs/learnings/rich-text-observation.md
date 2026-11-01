@@ -120,6 +120,28 @@ cached focus event. A private D-Bus regression reproduces both old failures and
 checks shared node/depth limits and unflagged-window fallback. A deeply nested
 Chromium editor exercises correction capture with and without focus events.
 
+## Focus discovery can time out below the depth limit
+
+On 2026-11-01, VS Code's focused terminal was at depth 36, within the
+64-level limit, but the helper's cold terminal probe exhausted its 800 ms
+budget. Slack's selected message field was at depth 22; its cold selection
+probe took 1.67 seconds, near the two-second limit. Raising the depth limit
+would not address these round-trip costs.
+
+Chromium exposes `org.a11y.atspi.Collection.GetMatches`. A window-scoped query
+for both Focused and Editable found those same widgets in 3–5 ms. The helper
+now tries this query within each active/inactive window group before walking
+its trees. Each query has a 100 ms deadline, and returned state is rechecked.
+Unsupported, empty, invalid or stalled queries retain the bounded tree
+fallback. Terminal detection and selection share this observer lookup.
+
+Transforms have a separate completion requirement: an ACK to `PasteText`
+does not substitute for `PasteOutcome`. In Wispr 1.6.1337, missing outcomes
+lead to the misleading "Textbox is not editable" notification after the
+paste deadline. The helper must echo the paste ID and report clipboard/key
+injection success or failure. This is not proof that the target inserted the
+text. See the updated [IPC contract](../reference/ipc-contract.md).
+
 ## Sources
 
 - [AT-SPI Hypertext](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Hypertext.html): character-offset-to-link mapping.

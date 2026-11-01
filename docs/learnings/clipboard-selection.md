@@ -24,3 +24,30 @@ and copy chords. AT-SPI selection reads bypass this fallback.
 The fallback still saves and restores plain text only. Rich clipboard formats
 and applications that copy a whole line with no selection remain limitations of
 this approach.
+
+## Slack selection is an embedded-object marker
+
+Slack's Chromium rich-text editor can return U+FFFC from AT-SPI `GetText`
+for a selected paragraph instead of its words. On 2026-11-01, the failed
+transform record contained exactly that one character and had status
+`no_text`; the helper had successfully found the focused field and returned
+its selection in five milliseconds. Neither focus depth nor paste completion
+explained this failure.
+
+Rejecting U+FFFC and relying on the copy fallback was insufficient: the live
+Slack copy attempt returned empty text. The child paragraph exposed the actual
+41-character selection, while its textbox parent exposed only `(0, 1)` around
+the embedded-object marker.
+
+Use the existing bounded Text/Hypertext reader in selection mode. Each visited
+object supplies its own selection offsets; follow only links inside those
+ranges, retaining the original offsets for link lookup. Never apply the root
+range to flattened text or return the entire editor. Recheck selection ranges
+and text after reading, and require two consistent snapshots. Unsupported or
+ambiguous ranges still fall back to the copy probe.
+
+The live reader returned the 41 selected characters without placeholders in
+150 ms. Regressions cover partial Unicode selections, nonzero root offsets,
+multiple paragraphs, invalid ranges, mid-read selection changes and avoiding
+unselected paragraphs. Existing ownership, role, size, depth and timeout
+checks are shared with full-editor observation.

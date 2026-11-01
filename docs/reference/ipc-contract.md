@@ -166,6 +166,14 @@ Linux): `SetAccessibilityGuidance`, `GetSystemSettingsWindowBounds`.
     "pasteId": ""                 // echoed by UpdateEditedText
   } } } }
 
+// ---- PasteOutcome (helper → Electron request, after every paste attempt) ----
+{ "HelperAPIRequest": { "uuid": "",
+  "PasteOutcome": { "payload": {
+    "pasteId": "",                // optional; echo PasteText's pasteId when set
+    "success": true, "timeElapsedMs": 0,
+    "reason": ""                  // optional failure description
+  } } } }
+
 // ---- UpdateEditedText (helper → Electron request) ----
 // The app can compare these strings to learn corrected words. Unsupported or
 // private fields may produce no report. Other observation metadata is optional.
@@ -295,7 +303,12 @@ to the paste text (offer `UTF8_STRING`/`text/plain` and optionally `text/html`) 
 XTEST/ydotool → (optionally) restore prior clipboard after a short delay. Mirror the retry/backoff
 on selection-owner acquisition. The renderer also fires follow-up `SimulateKeyPress` events after a
 successful paste (cursor moves, Enter-to-send) gated on `PasteOutcome`, so emitting a
-`PasteOutcome`/ACK after paste matters for those flows.
+`PasteOutcome` after paste matters for those flows. An ACK alone does not
+complete transforms: the app waits for `PasteOutcome` and otherwise reports
+"Textbox is not editable" after its deadline. This was rechecked against the
+installed 1.6.1337 bundle on 2026-11-01. On Linux, success means clipboard
+publication and key injection succeeded, not verified insertion into the field.
+Send failure outcomes when injection fails, retaining the error response.
 
 ---
 
