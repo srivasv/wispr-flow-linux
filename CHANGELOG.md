@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.20] - 2026-11-01
+
+### Fixed
+
+- Detect supported browser sites in Chrome and Vivaldi reliably, including
+  LinkedIn and WhatsApp, via helper `v0.1.4-srivas.11`. Bound URL reads within
+  the app query deadline and skip stalled unrelated accessibility app names.
+- Include multiline style-routing attributes in the manual testing log command.
+
 ## [v1.0.19] - 2026-10-30
 
 ### Fixed
