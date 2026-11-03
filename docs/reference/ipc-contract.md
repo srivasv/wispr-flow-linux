@@ -211,6 +211,22 @@ Linux): `SetAccessibilityGuidance`, `GetSystemSettingsWindowBounds`.
 { "HelperAPIResponse": { "uuid": "",
   "RunningApps": { "payload": { "apps": [ { "bundleId": "", "name": "" } ] } } } }
 
+// ---- GetTextBoxInfo (req: true) → TextBoxInfo (resp) ----
+// DictationStart also triggers TextBoxInfo as a helper-initiated request.
+// Rechecked against the shipped v1.6.1337 main-process validator and callers.
+{ "HelperAPIResponse": { "uuid": "",
+  "TextBoxInfo": { "payload": {
+    "accessibilityIsFunctioning": true,
+    "couldNotGetTextBoxInfo": false,
+    "isEditable": true,
+    "beforeText": "", "selectedText": "", "afterText": "", "contents": ""
+  } } } }
+// Text ranges surround the caret, or the selection when present. On unavailable
+// or private fields, use empty strings, couldNotGetTextBoxInfo: true and
+// isEditable: false. focusedElementHash is an optional string or null.
+// DictationStart wraps optional captureMarkerContext/includeOffscreen booleans
+// in payload; DictationStop and RecordingStarted are payload-less true.
+
 // ---- GetSelectedTextViaCopy (req) ----
 { "HelperAPIRequest": { "uuid": "",
   "GetSelectedTextViaCopy": { "payload": { "copyMode": "slack" } } } }   // CopyMode enum: only "slack" so far
