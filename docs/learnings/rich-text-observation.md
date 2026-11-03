@@ -24,8 +24,8 @@ are never used as substitute text.
 
 ## Observation remains inside one editor
 
-The shared snapshot reader is used only by post-paste correction observation.
-Ordinary paste and selection behavior are unchanged. Each embedded object must
+The shared snapshot reader supports correction observation, selection reads,
+and dictation textbox context. Each embedded object must
 have the same bus owner and be a direct child of the referring object; this
 keeps every recursive text read inside the original focused editable root.
 Only text-bearing roles are accepted. Passwords, independent nested editors,
@@ -141,6 +141,59 @@ lead to the misleading "Textbox is not editable" notification after the
 paste deadline. The helper must echo the paste ID and report clipboard/key
 injection success or failure. This is not proof that the target inserted the
 text. See the updated [IPC contract](../reference/ipc-contract.md).
+
+## Resumed dictation needs fresh textbox context
+
+Wispr 1.6.1337 resets `textboxContents` for every dictation. Its `TextBoxInfo`
+handler supplies `beforeText`, `selectedText` and `afterText` to the formatter;
+an ACK to `DictationStart` cannot fill those fields. The Linux helper previously
+ACKed both `DictationStart` and `GetTextBoxInfo` as unimplemented commands,
+leaving every segment without caret context. This is consistent with resumed
+segments being formatted as new sentences, although live service formatting
+still needs validation.
+
+The helper now emits fresh `TextBoxInfo` on `DictationStart` and returns it as a
+correlated response to `GetTextBoxInfo`. Reads run off the keyboard/IPC thread,
+have a two-second budget and are discarded after a newer start. Reads may
+finish after `DictationStop` while a short segment is still being processed.
+Context is restricted to a focused editor under an active window;
+inactive Chromium fields can retain Focused. Two matching snapshots preserve
+Unicode character offsets, selection boundaries and surrounding whitespace.
+Each surrounding range is capped at 500 characters to bound the IPC payload.
+
+Passwords, terminals, inaccessible fields, selections over 500 characters and
+ambiguous rich-text selections or carets report unavailable context. Do not
+reuse the last pasted string or lowercase the next transcript:
+the user may move the caret, edit the field, or switch applications between
+segments.
+
+## Rich-text caret offsets name embedded paragraphs
+
+The 2026-11-03 comparison resumed correctly in Kate and VS Code but failed in
+Slack. Length-only diagnostics showed `caret unavailable for editor`. This
+was partly the reader's own policy: expanded snapshots deliberately set caret
+to -1 for correction matching, and the new dictation-context path reused that
+policy. Chromium does expose a usable caret through its embedded objects.
+
+An isolated Chromium entry with two paragraphs returned root caret 1 while
+the second paragraph returned caret 5. Root offset 1 names the paragraph's
+U+FFFC placeholder, not the second character of the flattened text. Context
+reads now translate that placeholder through the validated Hyperlink, add the
+paragraph's caret offset to its expanded start, and include inserted paragraph
+newlines. Nested embedded objects use the same mapping recursively. Static
+descendants that duplicate paragraph text are still not read.
+
+The mapping is enabled only for dictation context. Correction matching retains
+its unique-paste rule. Missing, invalid or changing child carets fail closed;
+two complete matching snapshots are still required. Expanded selections remain
+unavailable because their endpoint offsets need separate mapping. Plain Text
+selections are unchanged. Isolated D-Bus regressions cover caret positions,
+Unicode, nested objects, invalid/changing offsets and selection rejection. A
+real Chromium fd-3 IPC check verified beginning, middle and end context for a
+two-paragraph Unicode editor. The live Slack retest supplied 42 characters
+before the caret on resume, and the user confirmed correct continuation
+without capitalization. Temporary length-only diagnostics were removed
+before release.
 
 ## Sources
 

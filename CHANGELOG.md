@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.22] - 2026-11-03
+
+### Fixed
+
+- Preserve sentence context when dictation resumes, including Slack rich-text
+  editors, via helper `v0.1.4-srivas.13`. Read fresh text around the caret
+  and map embedded paragraph offsets without changing correction observation.
+
 ## [v1.0.21] - 2026-11-01
 
 ### Fixed
