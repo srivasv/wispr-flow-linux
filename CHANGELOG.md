@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.24] - 2026-11-05
+
+### Fixed
+
+- Pause Linux shortcuts while Synergy controls another computer, for physical
+  keyboards and OpenDeck, via helper `v0.1.4-srivas.15`. Release held shortcut
+  keys when leaving Linux and resume capture on return. Requires Synergy 3
+  INFO logging; unknown focus pauses shortcuts.
+
 ## [v1.0.23] - 2026-11-04
 
 ### Fixed
