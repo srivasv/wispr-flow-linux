@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.23] - 2026-11-04
+
+### Fixed
+
+- Capture selected text on Wayland when the clipboard is empty, via helper
+  `v0.1.4-srivas.14`. Preserve errors for unsupported or unreadable clipboard
+  contents.
+
 ## [v1.0.22] - 2026-11-03
 
 ### Fixed
