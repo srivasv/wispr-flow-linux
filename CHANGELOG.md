@@ -8,6 +8,11 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore dictation and hands-free shortcuts immediately after Synergy starts,
+  via helper `v0.1.4-srivas.16`, without waiting for a screen transition.
+
 ## [v1.0.24] - 2026-11-05
 
 ### Fixed
