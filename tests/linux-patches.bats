@@ -761,7 +761,7 @@ new Function("require", "H", "S", "d", "pr", "A", "Gr", "i", "o",
 	fs.readFileSync(process.argv[1], "utf8"))(fake, H, S, d, pr, A, Gr, i, o);
 const pt = {screenX: 30, screenY: 12};
 H.ShowAutoPolishPicker(pt);
-H.ShowFetchLinkPicker({...pt, highlightUrl: "u"});
+H.ShowFetchLinkPicker?.({...pt, highlightUrl: "u"});
 H.ShowExtensionContextMenu({...pt, bubbleId: "b", extensionName: "x"});
 H.ShowShortcutJoinDrawer({...pt, source: "s"});
 H.HideAutoPolishPicker();
@@ -860,10 +860,43 @@ pad_drawer_body() {
 	cmp -s "$FIX" "$TEST_TMP/before.js"
 }
 
+@test "picker-anchor: supports the removed fetch-link picker in 1.6.1400" {
+	command -v node >/dev/null || skip 'node not installed'
+	[[ "$(uname -s)" == Linux ]] || skip 'the gate is linux-only'
+	write_picker_fixture
+	sed -i \
+		-e 's/(0,g.Z4)(d.qM.ShowFetchLinkPicker,!1,e=>{[^}]*}),//' \
+		-e 's/(0,g.Z4)(d.qM.HideFetchLinkPicker,!1,()=>{[^}]*}),//' \
+		"$FIX"
+	run grep -F 'FetchLinkPicker' "$FIX"
+	[[ "$status" -ne 0 ]]
+	run bash "$PATCH_DIR/linux-status-picker-anchor.sh" "$FIX"
+	[[ "$status" -eq 0 ]]
+	[[ "$(grep -o 'WISPR_LINUX_PICKER_ANCHOR' "$FIX" | wc -l)" -eq 5 ]]
+	node_check "$FIX"
+	assert_idempotent "$PATCH_DIR/linux-status-picker-anchor.sh" "$FIX"
+	run run_picker_fixture '' 'wayland-0'
+	[[ "$status" -eq 0 ]]
+	[[ "$output" == *'menu ShowAutoPolishPicker 1230,1012'* ]]
+	[[ "$output" == *'menu ShowExtensionContextMenu 1230,1012'* ]]
+	[[ "$output" == *'menu ShowShortcutJoinDrawer 1230,1012'* ]]
+	[[ "$output" == *'status DidHide 50,30'* ]]
+}
+
 @test "picker-anchor: idempotent on second run" {
 	write_picker_fixture
 	bash "$PATCH_DIR/linux-status-picker-anchor.sh" "$FIX"
 	assert_idempotent "$PATCH_DIR/linux-status-picker-anchor.sh" "$FIX"
+}
+
+@test "picker-anchor: missing fetch-link forward with its hide channel still present fails" {
+	write_picker_fixture
+	sed -i 's/(0,g.Z4)(d.qM.ShowFetchLinkPicker,!1,e=>{[^}]*}),//' "$FIX"
+	cp "$FIX" "$TEST_TMP/before.js"
+	run bash "$PATCH_DIR/linux-status-picker-anchor.sh" "$FIX"
+	[[ "$status" -ne 0 ]]
+	[[ "$output" == *"'B fetch-link picker' site(s), found 0"* ]]
+	cmp -s "$FIX" "$TEST_TMP/before.js"
 }
 
 @test "picker-anchor: bails and writes nothing when one site is missing" {

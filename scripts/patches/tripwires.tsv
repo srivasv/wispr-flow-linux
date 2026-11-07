@@ -30,7 +30,8 @@ linux-protocol-registration	main	P	1	the wispr-flow: protocol registration	\.app
 linux-protocol-registration	main	F	1	no other protocol registration	setAsDefaultProtocolClient
 linux-disable-pill-drag	main	F	1	the drag-overlay state log line	[Drag Overlay]: Setting drag overlay state to
 linux-status-picker-anchor	main	F	1	the auto-polish picker log line	Showing auto polish picker
-linux-status-picker-anchor	main	F	1	the fetch-link picker forward handler	.ShowFetchLinkPicker,!1,
+# Fetch-link was removed in 1.6.1400. The picker patch checks its handler
+# exactly once when either fetch-link IPC name exists in the main bundle.
 linux-status-picker-anchor	main	F	1	the extension bubble menu log line	Showing extension context menu
 linux-status-picker-anchor	main	F	1	the shortcut-join drawer log line	Showing shortcut join drawer
 linux-status-picker-anchor	main	P	2	the DidHide cursor point sent to the status window	\.statusWindow,[\w$]+\.[\w$]+\.DidHide,\{cursorScreenPoint:[\w$]+\.screen\.getCursorScreenPoint\(\)\}

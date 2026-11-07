@@ -65,7 +65,9 @@
 # and for DidHide the cursor point becomes {x:p.x-b.x,y:p.y-b.y}. Each site's
 # count is asserted (A-D exactly one, E exactly two) before anything is
 # written, so a moved or duplicated handler fails the build for a re-audit
-# instead of shipping half-wired. One marker, six insertions.
+# instead of shipping half-wired. Wispr 1.6.1400 removed the fetch-link picker;
+# site B may be absent only when both fetch-link IPC names are gone.
+# One marker, five or six insertions.
 #
 # Usage: linux-status-picker-anchor.sh <path-to-.webpack/main/index.js>
 #===============================================================================
@@ -99,7 +101,7 @@ sites = [
 		+ Q + r'Showing auto polish picker' + Q + r'[^{}]{0,200}?'
 		+ fwd('contextMenuWindow', 'ShowAutoPolishPicker')
 		+ r'(?P<arg>(?P=p))\)')),
-	("B fetch-link picker", 1, "in", re.compile(
+	("B fetch-link picker", int('FetchLinkPicker' in src), "in", re.compile(
 		r'\.ShowFetchLinkPicker,!1,(?P<p>' + ID + r')=>\{[^{}]{0,300}?'
 		+ fwd('contextMenuWindow', 'ShowFetchLinkPicker')
 		+ r'(?P<arg>(?P=p))\)')),
@@ -164,7 +166,7 @@ for start, end, text in edits:
 with io.open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
 	f.write(src)
 print(f"Patched: status-window offset applied at {len(edits)} site(s) "
-      f"(4 picker forwards, 2 DidHide cursor points).")
+      f"({len(edits) - 2} picker forwards, 2 DidHide cursor points).")
 PY
 
 # --- Verify the result --------------------------------------------------------
