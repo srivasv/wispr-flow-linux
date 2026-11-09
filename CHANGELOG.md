@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.26] - 2026-11-09
+
+### Fixed
+
+- Pass selected HTML text from Vivaldi to command mode using document
+  selection ranges, via helper `v0.1.4-srivas.18`. Keep clipboard-copy fallback
+  for selections spanning multiple text objects.
+
 ## [v1.0.25] - 2026-11-09
 
 ### Fixed
