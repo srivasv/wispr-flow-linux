@@ -10,6 +10,8 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ### Fixed
 
+- Keep dictation, hands-free, and command shortcuts working through Synergy
+  log rotation, via helper `v0.1.4-srivas.17`.
 - Restore dictation and hands-free shortcuts immediately after Synergy starts,
   via helper `v0.1.4-srivas.16`, without waiting for a screen transition.
 
