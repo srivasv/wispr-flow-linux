@@ -8,6 +8,14 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.27] - 2026-11-09
+
+### Fixed
+
+- Recover known Synergy focus after helper restarts even when focus records
+  have rotated out, via helper `v0.1.4-srivas.19`. Validate a private log
+  checkpoint and replay unseen transitions before enabling shortcuts.
+
 ## [v1.0.26] - 2026-11-09
 
 ### Fixed
