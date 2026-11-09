@@ -51,3 +51,30 @@ The live reader returned the 41 selected characters without placeholders in
 multiple paragraphs, invalid ranges, mid-read selection changes and avoiding
 unselected paragraphs. Existing ownership, role, size, depth and timeout
 checks are shared with full-editor observation.
+
+## Vivaldi highlights are document selections
+
+A read-only HTML selection need not focus an AT-SPI Text object or mark it
+editable. Vivaldi 8.3 exposed a selected file document 19 levels below its
+window on 2026-11-09; the focused-widget fallback stopped at depth 12.
+
+The document's Text interface returned an embedded-object marker with range
+`(0, 1)`, while its paragraph reported an empty `(0, 0)` Text selection.
+`Document.GetTextSelections` instead supplied the paragraph object and the
+actual character range, `(7, 20)` for the 13-character test selection.
+Requiring focused, editable Text fields or expanding their placeholder ranges
+therefore missed this highlight and forced a synthetic Ctrl+C.
+
+The helper now reuses the active-page finder from browser URL detection, then
+reads the document's selection endpoints. This works for `file://` pages as
+well as web URLs; site recognition still returns only its existing allowlist.
+The selected object must belong to that page and application, the range must
+be valid, and both the range and text must remain stable. Recheck active-window
+state after reading. Full-page text is not returned.
+
+Selections spanning different text objects, ambiguous ranges, and providers
+without `GetTextSelections` retain the clipboard-copy fallback. The focused
+Text path still runs first. A private D-Bus regression exercises a deep,
+unfocused page, partial Unicode selection, inactive windows, invalid ranges
+and endpoints outside the page. The live Wayland/Vivaldi check verifies two
+exact helper IPC responses without reaching the copy fallback.

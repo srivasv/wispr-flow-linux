@@ -123,7 +123,7 @@ subset is needed for a useful Linux MVP. Grouping by Linux relevance:
 | `GetActiveAppInfo` | `ActiveAppInfo` | `_NET_ACTIVE_WINDOW`→`_NET_WM_PID`→`/proc/PID/exe`, `_NET_WM_NAME` |
 | `GetAppInfo` | `AppInfo` | same, by request |
 | `GetRunningApps` | `RunningApps` | enumerate windows / `/proc` |
-| `GetSelectedTextViaCopy` | `SelectedTextViaCopy` | AT-SPI Text iface, or clipboard-copy probe |
+| `GetSelectedTextViaCopy` | `SelectedTextViaCopy` | AT-SPI Text / Document selection, or clipboard-copy probe |
 | `GetAccessibilityStatus` | `AccessibilityStatus` | is AT-SPI bus reachable |
 | `RequestAccessibilityPermission` / `StartAccessibilityServices` | — | no-op / best-effort on Linux |
 
