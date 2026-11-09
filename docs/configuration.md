@@ -51,6 +51,7 @@ echo 'export WISPR_DISABLE_GPU=1' >> ~/.profile
 | `~/Library/Application Support/Wispr Flow/` | Where earlier builds kept the database (#100). The launcher moves it into `~/.config/Wispr Flow/` on the first start after the update, and `--doctor` warns while it remains. |
 | `~/.config/autostart/wispr-flow.desktop` | The "Open at login" entry, written when you turn the setting on and removed when you turn it off. Its `Exec=` passes `--hidden`, so a login start keeps the Hub closed. Your desktop's startup-apps settings can disable it. |
 | `~/.cache/wispr-flow/launcher.log` | Launcher log — display backend, GPU decision, session env block, stale-lock cleanup. Attach this to bug reports. |
+| `~/.local/state/wispr-flow/synergy-focus.json` | Private Synergy focus checkpoint. Respects `XDG_STATE_HOME`; a stale or invalid checkpoint is ignored. |
 
 ```bash
 # Watch the launcher log:
