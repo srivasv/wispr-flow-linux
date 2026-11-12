@@ -78,3 +78,30 @@ Text path still runs first. A private D-Bus regression exercises a deep,
 unfocused page, partial Unicode selection, inactive windows, invalid ranges
 and endpoints outside the page. The live Wayland/Vivaldi check verifies two
 exact helper IPC responses without reaching the copy fallback.
+
+## Transform queries need the native window and the full highlight
+
+Electron applications can retain AT-SPI `Focused` and `Active` flags after
+losing desktop focus. Searching all applications can therefore return an old
+textbox before reaching the actual target. On 2026-11-12, a read-only probe
+chose an inactive Slack entry while the Claude extension input in VS Code
+exposed a 4,461-character selection.
+
+Bind explicit textbox and selection queries to the window title supplied by
+the native active-app provider. Search only that window and reject ambiguous
+matches. When native window identity is unavailable, retain the existing
+accessibility fallback. Do not trust a cached focused object from a different
+window.
+
+The caret-context reader added on 2026-11-03 limits before/after context and
+selected text to 500 characters to keep duplicate context fields beneath the
+IPC size budget. This rejects a longer highlight rather than truncating it.
+Explicit textbox queries must fall back to the existing bounded, stable
+selection reader when caret context is unavailable. Dictation keeps its
+500-character context window; transforms receive the full supported selection.
+The helper's 30,000-byte serialized-message guard still applies.
+
+A private D-Bus regression covers stale focus, an inactive accessibility
+window selected by native identity, a long Unicode highlight and a missing
+window. Both explicit read paths returned all 4,461 characters in the live
+Claude input without a copy chord or a cloud transform request.

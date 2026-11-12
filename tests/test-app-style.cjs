@@ -74,6 +74,8 @@ for (const isMac of [false, true]) {
 		const imports = new Map([...voiceBody.matchAll(/([\w$]+)=n\((\d+)\)/g)]
 			.map(([, alias, id]) => [alias, Number(id)]));
 		const dependency = re => imports.get(voiceBody.match(re)?.[1]);
+		const flag = voiceBody.match(/([\w$]+)\.([\w$]+)\.MyVoice/);
+		assert(flag, 'My Voice feature flag import missing');
 		for (const platform of ['linux', 'win32', 'darwin']) {
 			const prefs = {user: {}};
 			const appState = {prefs, persistentAppContext: {}};
@@ -84,7 +86,7 @@ for (const isMac of [false, true]) {
 				[dependency(/([\w$]+)\.Cg/), {Cg: value => value}],
 				[dependency(/([\w$]+)\.G1/), {G1: 'default'}],
 				[dependency(/([\w$]+)\.wX/), {wX: () => true}],
-				[dependency(/([\w$]+)\.TOI/), {TOI: {MyVoice: 'my-voice'}}], // codespell:ignore toi
+				[imports.get(flag[1]), {[flag[2]]: {MyVoice: 'my-voice'}}],
 			]);
 			assert(!mocks.has(undefined), 'selector imports changed');
 			const cache = new Map(mocks);

@@ -19,7 +19,7 @@
 }:
 let
   pname = "wispr-flow";
-  version = "1.6.1400";
+  version = "1.6.1457";
 
   #============================================================================
   # Source: the user-supplied Wispr Flow Windows installer (a Squirrel .exe).
@@ -91,13 +91,13 @@ let
   helperSrc = fetchFromGitHub {
     owner = "srivasv";
     repo = "helper";
-    rev = "v0.1.4-srivas.19";
-    hash = "sha256-Cxc6adlHfoY2xTiDTCTsf5AEVvU07btdPPwwzjnq6Js=";
+    rev = "v0.1.4-srivas.20";
+    hash = "sha256-SQhFB1sxggFAqbC8A08ZIOQIR8QhlWeblee0IEYZFNM=";
   };
 
   linux-helper = rustPlatform.buildRustPackage {
     pname = "wispr-flow-linux-helper";
-    version = "0.1.4-srivas.19";
+    version = "0.1.4-srivas.20";
 
     src = helperSrc;
 
