@@ -8,6 +8,20 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.28] - 2026-11-12
+
+### Fixed
+
+- Preserve complete transform selections in Claude extension inputs and other
+  editors with helper `v0.1.4-srivas.20`; constrain reads to the native active
+  window and keep long highlights separate from bounded dictation context.
+- Restore automated upstream update checks when Wispr renames its minified
+  My Voice feature-flag export.
+
+### Changed
+
+- Bundle Wispr Flow `1.6.1457`.
+
 ## [v1.0.27] - 2026-11-09
 
 ### Fixed
