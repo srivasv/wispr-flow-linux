@@ -8,6 +8,16 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.29] - 2026-11-13
+
+### Fixed
+
+- Supply caret context for mid-sentence dictation in Google Docs, including
+  table cells, via helper `v0.1.4-srivas.21`. Requires screen reader and braille
+  support in Docs.
+- Match Chrome accessibility titles with profile suffixes and preserve the
+  target application when KDE focuses Flow's recording-status window.
+
 ## [v1.0.28] - 2026-11-12
 
 ### Fixed
@@ -352,7 +362,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.25+wispr1.6.1400...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.29+wispr1.6.1483...HEAD
+[v1.0.29]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.28+wispr1.6.1483...v1.0.29+wispr1.6.1483
 [v1.0.25]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.24+wispr1.6.1400...v1.0.25+wispr1.6.1400
 [v1.0.17]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.16+wispr1.6.1324...v1.0.17+wispr1.6.1324
 [v1.0.14]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.13+wispr1.6.1324...v1.0.14+wispr1.6.1324

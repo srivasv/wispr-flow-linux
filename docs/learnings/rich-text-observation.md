@@ -200,3 +200,34 @@ before release.
 - [AT-SPI Hypertext](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/iface.Hypertext.html): character-offset-to-link mapping.
 - [AT-SPI Hyperlink](https://gnome.pages.gitlab.gnome.org/at-spi2-core/libatspi/class.Hyperlink.html): embedded anchor objects.
 - [Chromium Linux accessibility](https://github.com/chromium/chromium/blob/main/ui/accessibility/platform/ax_platform_node_auralinux.cc): lazy activation and Hypertext representation.
+
+## Google Docs context needs braille and the recording target
+
+Chrome exposes an empty offscreen textbox when Google Docs braille support is
+disabled. Screen reader support alone can expose a focused, non-editable group
+with no text. Enable both settings in **Tools > Accessibility settings**.
+
+With braille support enabled, Docs exposes its document as embedded-object
+markers. The caret descends through tables, rows, cells and paragraphs. The
+helper previously rejected those structural roles; accepting them while
+walking the whole document then exceeded the two-second context deadline.
+For the editor inside `docs-texteventtarget-iframe`, follow only the caret's
+validated embedded-object chain into its current text block. Ordinary editor
+context, selection reads and correction observation keep their existing paths.
+
+The direct reader passing did not prove that dictation received context.
+KWin's Chrome caption omitted the profile suffix present in the accessibility
+window name, so exact title matching missed the editor. Allow that suffix
+only for Chrome captions and still reject multiple matching windows. The
+Flow `Status` window also briefly took focus at recording start; ignore that
+specific KWin activation so it cannot replace the prior target. Scratchpad
+activations remain valid. Dictation must use native window identity while
+retaining its bounded selection policy separately from transform queries.
+
+On 2026-11-13, a live insertion was lowercase and the saved server context
+contained 102 characters before the caret and 16 after. Inspect
+`History.additionalContext.textbox_contents`; `History.textboxContents` can
+remain null even when the formatter received context. Verify the running
+helper through `/proc/<pid>/exe`: replacing its installed file does not
+replace a running process. Preserve Flow's existing display-backend arguments
+when restarting; dropping `--ozone-platform=x11` can change Status placement.
