@@ -74,3 +74,29 @@ promptly now, because the tokio runtime is actively driving the connection.
 
 - [decisions.md D-005](../decisions.md#d-005--per-compositor-active-app-providers),
   [D-008](../decisions.md#d-008--async-zbus-on-tokio-never-zbusblocking-for-services).
+
+## Browser tab changes do not activate another window
+
+On 2026-11-13, passive D-Bus monitoring with helper debug logging disabled
+showed two Chrome dictations using a cached Gmail caption after the user
+switched the same window to Google Docs. The context reader correctly rejected
+that obsolete title, leaving the formatter without textbox context. Switching
+away and back, or restarting while Docs was selected, hid the failure.
+
+Watch `captionChanged` on the active window as well as `windowActivated`
+([KWin scripting API](https://develop.kde.org/docs/plasma/kwin/api/)).
+Disconnect the old caption subscription when focus changes, and tolerate an
+already-destroyed previous window. Inactive tab changes must not replace the
+active target. A Node.js fixture executes the generated KWin script against
+fake windows and signals; it fails on the original activation-only script.
+
+Recording-start re-announcements have a separate publication race. A snapshot
+of the old browser can be emitted after a newer D-Bus focus report. Validate
+the snapshot against the current cache and hold that cache lock through event
+publication. A deterministic regression replays a delayed Vivaldi snapshot
+after Chrome and requires the stale announcement to be discarded.
+
+Missing context remains a valid outcome for unsupported, private or unstable
+fields. The helper logs the failure reason at info level without logging
+field contents, so normal-operation failures can be diagnosed without
+enabling verbose focus logs.

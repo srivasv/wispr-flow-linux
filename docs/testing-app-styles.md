@@ -1,6 +1,6 @@
 # Test application-aware styles
 
-Package 1.0.29 with helper v0.1.4-srivas.21 recognizes Linux apps and five browser services.
+Package 1.0.30 with helper v0.1.4-srivas.22 recognizes Linux apps and five browser services.
 
 - Gmail → Email.
 - Slack and LinkedIn → Work.
@@ -20,10 +20,10 @@ dpkg-query -W -f='${Version}\n' wispr-flow
 wispr-flow --doctor
 ```
 
-Expect package `1.6.1483-1.0.29` and helper `0.1.4-srivas.21`. Relaunch Flow.
+Expect package `1.6.1483-1.0.30` and helper `0.1.4-srivas.22`. Relaunch Flow.
 If APT metadata has not refreshed, download the matching deb from the
-[1.0.29 release](https://github.com/srivasv/wispr-flow-linux/releases/tag/v1.0.29%2Bwispr1.6.1483)
-and install it with `sudo apt install ./wispr-flow_1.6.1483-1.0.29_amd64.deb`
+[1.0.30 release](https://github.com/srivasv/wispr-flow-linux/releases/tag/v1.0.30%2Bwispr1.6.1483)
+and install it with `sudo apt install ./wispr-flow_1.6.1483-1.0.30_amd64.deb`
 (use the arm64 asset on an ARM system).
 
 ## Five-minute pass
@@ -148,3 +148,16 @@ before the caret, 16 after and no selection, with
 The standalone `History.textboxContents` column was null; use the nested
 context field when checking what was sent to the formatter. This was a local
 build check; repeat it after installing the published package.
+
+On KDE, also switch from another Chrome tab to Docs without switching windows.
+Repeat after Vivaldi → Chrome and leave the Doc focused until each paste
+finishes. Check every Chrome test record, rather than the latest dictation
+if the test reply itself was dictated into another application. Browser-tab
+title changes must update the target before the next context query.
+
+The 2026-11-13 `srivas.22` candidate passed both cases with `RUST_LOG` unset
+and no syscall tracer. The saved Chrome context contained 59 characters
+before / 129 after the caret for the tab switch and 18 before / 8 after for
+the browser switch. Both pasted texts were lowercase. Six preceding traced
+Chrome recordings also matched the helper replies to the saved server context.
+The candidate used the published app resources in a temporary app copy.
