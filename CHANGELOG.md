@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.30] - 2026-11-13
+
+### Fixed
+
+- Keep KDE browser targets current when switching tabs in the same window,
+  via helper `v0.1.4-srivas.22`, so cursor-context reads use the current title.
+- Reject delayed recording-start app announcements after a newer focus update
+  instead of restoring the previous browser.
+
 ## [v1.0.29] - 2026-11-13
 
 ### Fixed
@@ -362,7 +371,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.29+wispr1.6.1483...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.30+wispr1.6.1483...HEAD
+[v1.0.30]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.29+wispr1.6.1483...v1.0.30+wispr1.6.1483
 [v1.0.29]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.28+wispr1.6.1483...v1.0.29+wispr1.6.1483
 [v1.0.25]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.24+wispr1.6.1400...v1.0.25+wispr1.6.1400
 [v1.0.17]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.16+wispr1.6.1324...v1.0.17+wispr1.6.1324

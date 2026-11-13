@@ -51,6 +51,12 @@ helpers reject the embedded table or time out while reading the whole
 document. The corrected reader follows the caret into its current text block,
 including table cells, without walking unrelated document content.
 
+On KDE, helper `v0.1.4-srivas.22` also refreshes window titles when a browser
+tab changes. Earlier helpers could retain a Gmail caption after switching to
+Docs in the same Chrome window and fail to find the editor. Context failures
+now include their reason in `~/.cache/wispr-flow/launcher.log` at normal log
+level.
+
 ## Push-to-talk doesn't fire / shortcut recorder captures no keystrokes (including during onboarding)
 
 The in-app shortcut recorder (including the one on the onboarding setup screen)
