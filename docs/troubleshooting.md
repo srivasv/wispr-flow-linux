@@ -31,6 +31,26 @@ It prints `[PASS]` / `[WARN]` / `[FAIL]` lines with inline fix commands, grouped
 The exit status is non-zero if any check FAILs. Do me a favor and attach the
 full output to bug reports — it's the single most useful thing you can hand me.
 
+## Words inserted into a Google Docs sentence are capitalized
+
+Google Docs must expose the text around the caret for Flow to format an
+insertion as part of the existing sentence.
+
+1. Open **Tools > Accessibility settings** in the document.
+2. Enable both **Turn on screen reader support** and **Turn on braille
+   support**, then save the settings.
+3. Click inside the sentence and move the caret once before retrying dictation.
+
+Screen reader support alone can expose an empty, non-editable group on Linux.
+Braille support exposes the document text and nested caret offsets through
+Chrome's accessibility interface. A physical braille display is not required
+for the helper to read that interface.
+
+The helper must also support caret context inside Google Docs tables. Older
+helpers reject the embedded table or time out while reading the whole
+document. The corrected reader follows the caret into its current text block,
+including table cells, without walking unrelated document content.
+
 ## Push-to-talk doesn't fire / shortcut recorder captures no keystrokes (including during onboarding)
 
 The in-app shortcut recorder (including the one on the onboarding setup screen)

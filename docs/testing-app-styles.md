@@ -1,6 +1,6 @@
 # Test application-aware styles
 
-Package 1.0.18 with helper v0.1.4-srivas.9 recognizes Linux apps and five browser services.
+Package 1.0.29 with helper v0.1.4-srivas.21 recognizes Linux apps and five browser services.
 
 - Gmail → Email.
 - Slack and LinkedIn → Work.
@@ -20,10 +20,10 @@ dpkg-query -W -f='${Version}\n' wispr-flow
 wispr-flow --doctor
 ```
 
-Expect package `1.6.1324-1.0.18` and helper `0.1.4-srivas.9`. Relaunch Flow.
+Expect package `1.6.1483-1.0.29` and helper `0.1.4-srivas.21`. Relaunch Flow.
 If APT metadata has not refreshed, download the matching deb from the
-[1.0.18 release](https://github.com/srivasv/wispr-flow-linux/releases/tag/v1.0.18%2Bwispr1.6.1324)
-and install it with `sudo apt install ./wispr-flow_1.6.1324-1.0.18_amd64.deb`
+[1.0.29 release](https://github.com/srivasv/wispr-flow-linux/releases/tag/v1.0.29%2Bwispr1.6.1483)
+and install it with `sudo apt install ./wispr-flow_1.6.1483-1.0.29_amd64.deb`
 (use the arm64 asset on an ARM system).
 
 ## Five-minute pass
@@ -48,7 +48,8 @@ in each:
 | Telegram Web message composer | Personal |
 | Unrelated site's editable field | Other |
 
-Wait roughly one second after switching tabs before starting each dictation.
+Start dictation at your normal pace after focusing the composer; no extra
+five-second wait should be needed.
 Check every site once, then repeat Gmail → Telegram → unrelated site to catch
 stale context. Repeat dictation without changing focus once; it must retain
 the same category. Test native Slack or Telegram as well if already installed.
@@ -98,3 +99,52 @@ style preferences afterward.
 For a failure, record package/helper versions, desktop and X11/Wayland session,
 browser version, native app versus website, expected/observed category, whether
 the URL was empty, and only the relevant redacted log entries.
+
+## Published-build results (2026-11-01)
+
+After updating and restarting Flow, package `1.6.1337-1.0.20` ran helper
+`v0.1.4-srivas.11`. The installed and running x86_64 helper matched the
+published release asset byte-for-byte (SHA256):
+
+```text
+79eb9ddcd635a37f590d69c6d8d21d58bb459ed269b80c6fb554bdb3f570e907
+```
+
+Normal-pace dictation into unsent drafts followed Chrome LinkedIn → Vivaldi
+WhatsApp → Chrome LinkedIn → Vivaldi WhatsApp. All four attempts passed:
+
+| Browser and site | Attempts | Category sent | Configured style |
+|---|---|---|---|
+| Chrome LinkedIn | 2/2 | Work | casual |
+| Vivaldi WhatsApp Web | 2/2 | Personal | veryCasual |
+
+The first attempt and both directions of browser switching routed correctly.
+Each following app-change notification retained the expected hostname
+(`linkedin.com` or `web.whatsapp.com`); none of these attempts fell back to
+Other. A subsequent ChatGPT dictation selected Other with an empty URL,
+confirming no stale browser URL in that transition. No insertion problems
+were reported.
+
+The downloaded published x86_64 helper also passed the isolated event/query
+harness for Gmail, Slack, LinkedIn, WhatsApp, Telegram, and an unknown site.
+These automated fixtures are separate from live service tests. Earlier local
+builds passed additional live Chrome and Vivaldi cases; this published-build
+manual pass covers only the two browser/site pairs above. Firefox and Vivaldi
+Telegram remain unverified live. Logs establish routing, not subjective
+transcription wording quality or coverage across every desktop environment.
+
+## Mid-sentence dictation in Google Docs
+
+Enable both screen reader and braille support under **Tools > Accessibility
+settings**. Place the caret between words in an existing sentence, including
+a sentence inside a table cell, and dictate a lowercase common word. It must
+be inserted without starting a new sentence. Repeat after switching windows.
+
+On 2026-11-13, the locally built fix passed a live Chrome/Google Docs check
+on KDE with Flow running under XWayland. The inserted word was lowercase.
+The saved `History.additionalContext.textbox_contents` contained 102 characters
+before the caret, 16 after and no selection, with
+`accessibilityIsFunctioning: true` and `couldNotGetTextBoxInfo: false`.
+The standalone `History.textboxContents` column was null; use the nested
+context field when checking what was sent to the formatter. This was a local
+build check; repeat it after installing the published package.
