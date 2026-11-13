@@ -57,6 +57,11 @@ Docs in the same Chrome window and fail to find the editor. Context failures
 now include their reason in `~/.cache/wispr-flow/launcher.log` at normal log
 level.
 
+Helper `v0.1.4-srivas.23` also maps selected words inside Docs' embedded text
+blocks. Earlier helpers logged `selection offsets unavailable for expanded
+editor` and omitted context for this selection shape, including a reported
+failure after reloading the Doc. A caret-only reload did not reproduce it.
+
 ## Push-to-talk doesn't fire / shortcut recorder captures no keystrokes (including during onboarding)
 
 The in-app shortcut recorder (including the one on the onboarding setup screen)

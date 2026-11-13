@@ -52,6 +52,29 @@ multiple paragraphs, invalid ranges, mid-read selection changes and avoiding
 unselected paragraphs. Existing ownership, role, size, depth and timeout
 checks are shared with full-editor observation.
 
+## Google Docs word context uses paragraph selection offsets
+
+A capitalized insertion after reloading Docs logged `selection offsets
+unavailable for expanded editor` on 2026-11-13. Caret-only reload checks passed.
+A highlighted word reproduced the rejection: the editor reported `(8, 9)`
+around its paragraph marker, while that paragraph reported `(45, 52)` for
+the actual seven-character word.
+
+For Docs context, follow the single selected object on the caret path. Map
+the paragraph's selection endpoints while expanding any preceding inline
+objects; do not apply raw paragraph offsets to expanded text. Require each
+ancestor to select exactly its current object marker and recheck every
+selection and text snapshot. Reject selections spanning embedded objects
+and retain the existing privacy and resource bounds.
+
+The first fixture failed on the ancestor-marker guard; the live word check
+then exposed a preceding inline marker missing from the fixture. Both shapes
+now have regression coverage. The corrected live read returned context lengths
+50 before, 7 selected and 121 after. Subsequent dictation with debug logging
+off preserved the selected-word context and post-reload caret context; both
+insertions were lowercase. This establishes the unsupported-selection cause,
+not that every reload creates such a selection.
+
 ## Vivaldi highlights are document selections
 
 A read-only HTML selection need not focus an AT-SPI Text object or mark it

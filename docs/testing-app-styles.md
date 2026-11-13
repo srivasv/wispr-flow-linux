@@ -161,3 +161,15 @@ before / 129 after the caret for the tab switch and 18 before / 8 after for
 the browser switch. Both pasted texts were lowercase. Six preceding traced
 Chrome recordings also matched the helper replies to the saved server context.
 The candidate used the published app resources in a temporary app copy.
+
+Also select one word inside the sentence and dictate its replacement, then
+reload Docs, click between words and try another insertion. Inspect
+`selectedText` as well as `beforeText` and `afterText`; Docs reports selected
+words through ancestor object markers and paragraph-relative offsets.
+
+The 2026-11-13 `srivas.23` candidate passed both cases with debug logging off.
+The selected-word recording saved context lengths 50 before / 7 selected /
+121 after; the post-reload insertion saved 55 before / 0 selected / 121 after.
+Both identified Chrome and pasted lowercase. The user confirmed both results.
+The selected-word live reader and its isolated table/inline-object fixture
+also passed; the fixture failed before the corresponding mapping fixes.
