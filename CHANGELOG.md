@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.32] - 2026-11-16
+
+### Fixed
+
+- Preserve mid-sentence dictation context in Slack bullet lists via helper
+  `v0.1.4-srivas.24`.
+- Find ChatGPT's active composer when companion accessibility windows have
+  the same title, while rejecting ambiguous window and application matches.
+
 ## [v1.0.31] - 2026-11-13
 
 ### Fixed
@@ -379,7 +388,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.31+wispr1.6.1483...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.32+wispr1.6.1483...HEAD
+[v1.0.32]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.31+wispr1.6.1483...v1.0.32+wispr1.6.1483
 [v1.0.31]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.30+wispr1.6.1483...v1.0.31+wispr1.6.1483
 [v1.0.30]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.29+wispr1.6.1483...v1.0.30+wispr1.6.1483
 [v1.0.29]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.28+wispr1.6.1483...v1.0.29+wispr1.6.1483

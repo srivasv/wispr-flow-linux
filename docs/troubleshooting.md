@@ -31,6 +31,20 @@ It prints `[PASS]` / `[WARN]` / `[FAIL]` lines with inline fix commands, grouped
 The exit status is non-zero if any check FAILs. Do me a favor and attach the
 full output to bug reports — it's the single most useful thing you can hand me.
 
+## Words inserted into Slack or ChatGPT sentences are capitalized
+
+Update to package `1.6.1483-1.0.32` or later, which includes helper
+`v0.1.4-srivas.24`, then fully quit and reopen Wispr Flow before retrying.
+Replacing the helper file leaves the running process on its previous binary
+until it restarts.
+
+Earlier helpers rejected Slack's embedded list elements and logged
+`unsupported embedded object`. ChatGPT can expose multiple accessibility
+windows with the same title, causing `no focused editor`. The updated helper
+reads list-item caret context and resolves exact duplicate titles within one
+application only when exactly one matching window is active. Ambiguous
+application and window matches still omit context.
+
 ## Words inserted into a Google Docs sentence are capitalized
 
 Google Docs must expose the text around the caret for Flow to format an
