@@ -8,6 +8,13 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.33] - 2026-11-19
+
+### Fixed
+
+- Write release AppImage update sidecars beside the package and fail the build
+  if sidecar generation fails or produces an empty file.
+
 ## [v1.0.32] - 2026-11-16
 
 ### Fixed

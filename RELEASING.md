@@ -125,14 +125,17 @@ After the gate jobs pass, the [`ci.yml`](.github/workflows/ci.yml) chain:
 1. Builds deb/rpm/AppImage for amd64 and arm64 — each build resolves and
    downloads the proprietary installer and stages the pinned prebuilt helper.
 2. Runs the format validators (`tests/test-artifact-*.sh`).
-3. Creates the GitHub Release and attaches the six packages.
+3. Creates the GitHub Release and attaches the six packages and two AppImage
+   `.zsync` update sidecars.
 
 The APT job publishes after every tagged release. The retained
 `update-dnf-repo` and `update-aur-repo` jobs remain disabled.
 
 ## After the release lands
 
-- **Verify the Release page** — six assets, sizes look right, notes rendered.
+- **Verify the Release page** — six packages and two non-empty AppImage
+  `.zsync` sidecars, sizes look right, notes rendered. Each sidecar's `URL`
+  names its matching AppImage basename.
 - **Smoke-test one artifact** — download the AppImage and run `--doctor`.
 
 ## If something goes wrong mid-release
@@ -142,3 +145,19 @@ The APT job publishes after every tagged release. The retained
   append-only; the original tag stays.
 - **A bad release shipped.** Mark the GitHub Release as a pre-release/draft and
   ship a follow-up; don't delete assets that the Worker may already be caching.
+
+## AppImage update sidecars
+
+Release makers write `.zsync` sidecars beside their AppImages explicitly.
+
+```bash
+zsyncmake -u "$(basename "$OUT")" -o "$OUT.zsync" "$OUT"
+```
+
+Without `-o`, zsyncmake writes into the caller's working directory, even when
+the AppImage path points elsewhere. The build collection only searches
+`build-linux/`, so a sidecar in the repository root is not published. Both
+architecture collectors already include `.AppImage.zsync`; do not broaden
+the release upload glob to compensate for a misplaced output. Missing tools,
+generation failures and missing or empty sidecars fail release builds. Local
+builds still omit release updater metadata and do not require zsyncmake.

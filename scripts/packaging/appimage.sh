@@ -266,8 +266,7 @@ export ARCH
 # recent GitHub Release. Keep the glob in sync with the OUT filename above.
 if [[ "${GITHUB_ACTIONS:-}" == 'true' ]]; then
   if ! command -v zsyncmake >/dev/null 2>&1; then
-    warn 'zsyncmake not found; the .zsync delta will not be generated.'
-    warn '  Install the "zsync" package in the build environment to enable it.'
+    die 'zsyncmake is required for release AppImage update metadata'
   fi
   update_repo="${GITHUB_REPOSITORY:-wispr-flow-linux/wispr-flow-linux}"
 	update_info="gh-releases-zsync|${update_repo/\//|}|latest|${NAME}-*-${ARCH}.AppImage.zsync"
@@ -275,11 +274,13 @@ if [[ "${GITHUB_ACTIONS:-}" == 'true' ]]; then
   if ! "$appimagetool" --updateinformation "$update_info" "$APPDIR" "$OUT"; then
     die "appimagetool failed to build the AppImage"
   fi
-  if [[ -f "$OUT.zsync" ]]; then
-    echo "  zsync: $OUT.zsync (publish alongside the AppImage)"
-  else
-    warn 'zsync delta not generated (zsyncmake missing?); auto-update will be slower.'
-  fi
+	# appimagetool may write its sidecar in the caller's working directory.
+	# Generate it at the exact path collected by both architecture workflows.
+	if ! zsyncmake -u "$(basename "$OUT")" -o "$OUT.zsync" "$OUT"; then
+		die 'zsyncmake failed to create the AppImage update sidecar'
+	fi
+	[[ -s "$OUT.zsync" ]] || die 'AppImage update sidecar is missing or empty'
+	echo "  zsync: $OUT.zsync (publish alongside the AppImage)"
 else
   if ! "$appimagetool" "$APPDIR" "$OUT"; then
     die "appimagetool failed to build the AppImage"
