@@ -8,6 +8,15 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.34] - 2026-11-21
+
+### Fixed
+
+- Report empty caret context in the Codex composer without including its
+  placeholder hint, via helper `v0.1.4-srivas.25`.
+- Bound accessibility discovery calls so a stalled provider cannot exhaust
+  the dictation context deadline.
+
 ## [v1.0.33] - 2026-11-19
 
 ### Fixed
