@@ -17,6 +17,6 @@
 # The sha256 is the one upstream publishes in
 # https://dl.wisprflow.com/wispr-flow/win32/latest.json for this URL.
 #===============================================================================
-WISPR_VERSION='1.6.1609'
-WISPR_INSTALLER_URL='https://dl.wisprflow.com/wispr-flow/win32/x64/Wispr%20Flow%20Setup-v1.6.1609.exe'
-WISPR_INSTALLER_SHA256='13e57effd7ae1eea31b30a6c1fcb7b9a3057acc1bad526246ca0037bab24f0a6'
+WISPR_VERSION='1.6.1619'
+WISPR_INSTALLER_URL='https://dl.wisprflow.com/wispr-flow/win32/x64/Wispr%20Flow%20Setup-v1.6.1619.exe'
+WISPR_INSTALLER_SHA256='8e6aa7db9bee3280dabcac99bd721963c960af17b5ae1c2241e826cd727ae1cb'
