@@ -8,6 +8,13 @@ Flow app version is tracked separately by the `+wispr{X.Y.Z}` suffix.
 
 ## [Unreleased]
 
+## [v1.0.35] - 2026-11-25
+
+### Fixed
+
+- Preserve surrounding dictation text when replacing a word in a ChatGPT or
+  other Chromium rich-text paragraph, via helper `v0.1.4-srivas.26`.
+
 ## [v1.0.34] - 2026-11-21
 
 ### Fixed
@@ -404,7 +411,8 @@ Initial release — unofficial Linux repackaging of Wispr Flow (1.5.695) as
 (text injection, clipboard, global key capture), the Linux platform-gate
 patches, Nix flake, docs tree, and the tag-driven release/publish pipeline.
 
-[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.32+wispr1.6.1483...HEAD
+[Unreleased]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.35+wispr1.6.1619...HEAD
+[v1.0.35]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.34+wispr1.6.1619...v1.0.35+wispr1.6.1619
 [v1.0.32]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.31+wispr1.6.1483...v1.0.32+wispr1.6.1483
 [v1.0.31]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.30+wispr1.6.1483...v1.0.31+wispr1.6.1483
 [v1.0.30]: https://github.com/srivasv/wispr-flow-linux/compare/v1.0.29+wispr1.6.1483...v1.0.30+wispr1.6.1483
